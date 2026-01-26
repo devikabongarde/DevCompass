@@ -28,36 +28,110 @@ export const CalendarScreen: React.FC = () => {
 
   const getHackathonDates = (hackathon: any) => {
     const dates = [];
+    const now = new Date();
     
-    // Try to extract dates from description
-    if (hackathon.description) {
-      // Look for date patterns like "2024-01-15" or "Jan 15, 2024"
-      const dateMatches = hackathon.description.match(/\d{4}-\d{2}-\d{2}/g) || 
-                          hackathon.description.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/g);
+    // Try to find start and end dates
+    const possibleStartFields = [
+      hackathon.start_date,
+      hackathon.event_start_date,
+      hackathon.hackathon_start_date,
+      hackathon.begin_date
+    ];
+    
+    const possibleEndFields = [
+      hackathon.end_date,
+      hackathon.event_end_date,
+      hackathon.hackathon_end_date,
+      hackathon.registration_deadline,
+      hackathon.deadline,
+      hackathon.submission_deadline
+    ];
+    
+    let startDate = null;
+    let endDate = null;
+    
+    // Find start date
+    for (const dateField of possibleStartFields) {
+      if (dateField) {
+        try {
+          const date = new Date(dateField);
+          if (!isNaN(date.getTime())) {
+            startDate = date;
+            break;
+          }
+        } catch (e) {}
+      }
+    }
+    
+    // Find end date
+    for (const dateField of possibleEndFields) {
+      if (dateField) {
+        try {
+          const date = new Date(dateField);
+          if (!isNaN(date.getTime())) {
+            endDate = date;
+            break;
+          }
+        } catch (e) {}
+      }
+    }
+    
+    // Determine which date to use
+    let targetDate = null;
+    
+    if (startDate && endDate) {
+      // If hackathon is ongoing (start date passed, end date future)
+      if (startDate <= now && endDate >= now) {
+        targetDate = now; // Show on current date
+      } else {
+        targetDate = startDate; // Show on start date
+      }
+    } else if (startDate) {
+      targetDate = startDate;
+    } else if (endDate) {
+      targetDate = endDate;
+    }
+    
+    if (targetDate) {
+      dates.push({
+        year: targetDate.getFullYear(),
+        month: targetDate.getMonth(),
+        day: targetDate.getDate()
+      });
+    }
+    
+    // If no structured dates found, try to extract from description
+    if (dates.length === 0 && hackathon.description) {
+      const datePatterns = [
+        /\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b/gi,
+        /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),?\s+(\d{4})\b/gi,
+        /\b(\d{4})-(\d{2})-(\d{2})\b/g
+      ];
       
-      if (dateMatches) {
-        dateMatches.forEach(dateStr => {
+      for (const pattern of datePatterns) {
+        const matches = hackathon.description.match(pattern);
+        if (matches && matches.length > 0) {
           try {
-            const date = new Date(dateStr);
+            const date = new Date(matches[0]);
             if (!isNaN(date.getTime())) {
               dates.push({
                 year: date.getFullYear(),
                 month: date.getMonth(),
                 day: date.getDate()
               });
+              break;
             }
           } catch (e) {}
-        });
+        }
       }
     }
     
-    // If no dates found, use current date as placeholder
+    // If still no dates found, use current date as fallback
     if (dates.length === 0) {
-      const today = new Date();
       dates.push({
-        year: today.getFullYear(),
-        month: today.getMonth(),
-        day: today.getDate()
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        day: now.getDate()
       });
     }
     

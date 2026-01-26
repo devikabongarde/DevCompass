@@ -14,7 +14,6 @@ export const hackathonService = {
     let query = supabase
       .from('hackathons')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
       .range(page * limit, (page + 1) * limit - 1);
 
     // Apply filters
@@ -30,8 +29,36 @@ export const hackathonService = {
     
     if (error) throw error;
     
+    // Separate hackathons by platform
+    const unstopHackathons = (data || []).filter(h => h.platform_source === 'unstop');
+    const devpostHackathons = (data || []).filter(h => h.platform_source === 'devpost');
+    
+    // Shuffle each platform's hackathons
+    const shuffledUnstop = unstopHackathons.sort(() => Math.random() - 0.5);
+    const shuffledDevpost = devpostHackathons.sort(() => Math.random() - 0.5);
+    
+    // Create random interleaved pattern
+    const mixedHackathons = [];
+    let unstopIndex = 0;
+    let devpostIndex = 0;
+    
+    while (unstopIndex < shuffledUnstop.length || devpostIndex < shuffledDevpost.length) {
+      // Random choice: 0 = unstop, 1 = devpost
+      const choice = Math.random() < 0.5 ? 0 : 1;
+      
+      if (choice === 0 && unstopIndex < shuffledUnstop.length) {
+        mixedHackathons.push(shuffledUnstop[unstopIndex++]);
+      } else if (choice === 1 && devpostIndex < shuffledDevpost.length) {
+        mixedHackathons.push(shuffledDevpost[devpostIndex++]);
+      } else if (unstopIndex < shuffledUnstop.length) {
+        mixedHackathons.push(shuffledUnstop[unstopIndex++]);
+      } else if (devpostIndex < shuffledDevpost.length) {
+        mixedHackathons.push(shuffledDevpost[devpostIndex++]);
+      }
+    }
+    
     return {
-      data: data || [],
+      data: mixedHackathons,
       count: count || 0,
       page,
       hasMore: (data?.length || 0) === limit,

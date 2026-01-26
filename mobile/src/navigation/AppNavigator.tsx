@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, View } from 'react-native';
 
-import { useAuthStore, useThemeStore } from '../stores';
+import { useAuthStore, useThemeStore, useFeedStore } from '../stores';
 import { theme } from '../theme';
 import { RootStackParamList, MainTabParamList } from '../types';
 
@@ -22,6 +22,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabs: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
+  const { refresh } = useFeedStore();
   
   return (
     <Tab.Navigator
@@ -81,6 +82,13 @@ const MainTabs: React.FC = () => {
           }} />
         ),
       })}
+      screenListeners={{
+        tabPress: (e) => {
+          if (e.target?.includes('Feed')) {
+            refresh();
+          }
+        },
+      }}
     >
       <Tab.Screen name="Feed" component={FeedScreen} />
       <Tab.Screen name="Saved" component={SavedScreen} />

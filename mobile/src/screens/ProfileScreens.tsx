@@ -18,6 +18,7 @@ import { theme } from '../theme';
 export const SavedHackathonsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { savedHackathons, unsaveHackathon } = useSavedStore();
+  const { isDarkMode = false } = useThemeStore();
 
   const handleHackathonPress = (hackathon: any) => {
     navigation.navigate('HackathonDetail' as never, { hackathon } as never);
@@ -31,13 +32,71 @@ export const SavedHackathonsScreen: React.FC = () => {
     }
   };
 
+  const containerStyle = {
+    flex: 1,
+    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
+  };
+
+  const headerStyle = {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
+  };
+
+  const headerTitleStyle = {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+  };
+
+  const hackathonCardStyle = {
+    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  };
+
+  const hackathonTitleStyle = {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    flex: 1,
+    marginRight: 12,
+  };
+
+  const descriptionStyle = {
+    fontSize: 14,
+    color: isDarkMode ? '#94a3b8' : '#64748B',
+    lineHeight: 20,
+  };
+
+  const emptyTitleStyle = {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    marginTop: 16,
+    marginBottom: 8,
+  };
+
+  const emptyTextStyle = {
+    fontSize: 14,
+    color: isDarkMode ? '#94a3b8' : '#64748B',
+    textAlign: 'center' as const,
+    paddingHorizontal: 32,
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={containerStyle}>
+      <View style={headerStyle}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#0F172A" />
+          <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Saved Hackathons</Text>
+        <Text style={headerTitleStyle}>Saved Hackathons</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -46,11 +105,11 @@ export const SavedHackathonsScreen: React.FC = () => {
           savedHackathons.map((hackathon) => (
             <TouchableOpacity
               key={hackathon.id}
-              style={styles.hackathonCard}
+              style={hackathonCardStyle}
               onPress={() => handleHackathonPress(hackathon)}
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.hackathonTitle} numberOfLines={2}>
+                <Text style={hackathonTitleStyle} numberOfLines={2}>
                   {hackathon.title}
                 </Text>
                 <TouchableOpacity
@@ -77,7 +136,7 @@ export const SavedHackathonsScreen: React.FC = () => {
                   </Text>
                 )}
                 
-                <Text style={styles.description} numberOfLines={3}>
+                <Text style={descriptionStyle} numberOfLines={3}>
                   {hackathon.short_summary || hackathon.description}
                 </Text>
               </View>
@@ -85,9 +144,9 @@ export const SavedHackathonsScreen: React.FC = () => {
           ))
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="heart-outline" size={64} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>No Saved Hackathons</Text>
-            <Text style={styles.emptyText}>
+            <Ionicons name="heart-outline" size={64} color={isDarkMode ? '#64748b' : '#94A3B8'} />
+            <Text style={emptyTitleStyle}>No Saved Hackathons</Text>
+            <Text style={emptyTextStyle}>
               Swipe left on hackathons in the feed to save them here
             </Text>
           </View>
@@ -99,6 +158,7 @@ export const SavedHackathonsScreen: React.FC = () => {
 
 export const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { isDarkMode = false } = useThemeStore();
   const [notifications, setNotifications] = useState({
     deadlineReminders: true,
     newHackathons: true,
@@ -113,24 +173,73 @@ export const NotificationsScreen: React.FC = () => {
     }));
   };
 
+  const containerStyle = {
+    flex: 1,
+    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
+  };
+
+  const headerStyle = {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
+  };
+
+  const headerTitleStyle = {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+  };
+
+  const sectionStyle = {
+    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden' as const,
+  };
+
+  const sectionTitleStyle = {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    padding: 16,
+    paddingBottom: 8,
+  };
+
+  const settingTitleStyle = {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    marginBottom: 4,
+  };
+
+  const settingDescriptionStyle = {
+    fontSize: 14,
+    color: isDarkMode ? '#94a3b8' : '#64748B',
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={containerStyle}>
+      <View style={headerStyle}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#0F172A" />
+          <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={headerTitleStyle}>Notifications</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hackathon Alerts</Text>
+        <View style={sectionStyle}>
+          <Text style={sectionTitleStyle}>Hackathon Alerts</Text>
           
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingTitle}>Deadline Reminders</Text>
-              <Text style={styles.settingDescription}>
+              <Text style={settingTitleStyle}>Deadline Reminders</Text>
+              <Text style={settingDescriptionStyle}>
                 Get notified 24 hours before registration deadlines
               </Text>
             </View>
@@ -143,8 +252,8 @@ export const NotificationsScreen: React.FC = () => {
 
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingTitle}>New Hackathons</Text>
-              <Text style={styles.settingDescription}>
+              <Text style={settingTitleStyle}>New Hackathons</Text>
+              <Text style={settingDescriptionStyle}>
                 Be the first to know about new hackathons
               </Text>
             </View>
@@ -157,8 +266,8 @@ export const NotificationsScreen: React.FC = () => {
 
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingTitle}>Prize Updates</Text>
-              <Text style={styles.settingDescription}>
+              <Text style={settingTitleStyle}>Prize Updates</Text>
+              <Text style={settingDescriptionStyle}>
                 Get notified when prize amounts change
               </Text>
             </View>
@@ -170,13 +279,13 @@ export const NotificationsScreen: React.FC = () => {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Digest</Text>
+        <View style={sectionStyle}>
+          <Text style={sectionTitleStyle}>Digest</Text>
           
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingTitle}>Weekly Digest</Text>
-              <Text style={styles.settingDescription}>
+              <Text style={settingTitleStyle}>Weekly Digest</Text>
+              <Text style={settingDescriptionStyle}>
                 Weekly summary of trending hackathons
               </Text>
             </View>
@@ -357,6 +466,7 @@ export const SettingsScreen: React.FC = () => {
 
 export const HelpSupportScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { isDarkMode = false } = useThemeStore();
 
   const handleContactSupport = () => {
     Linking.openURL('mailto:support@devcompare.app?subject=DevCompare Support');
@@ -370,74 +480,136 @@ export const HelpSupportScreen: React.FC = () => {
     Linking.openURL('mailto:features@devcompare.app?subject=Feature Request');
   };
 
+  const containerStyle = {
+    flex: 1,
+    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
+  };
+
+  const headerStyle = {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
+  };
+
+  const headerTitleStyle = {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+  };
+
+  const sectionStyle = {
+    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden' as const,
+  };
+
+  const sectionTitleStyle = {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    padding: 16,
+    paddingBottom: 8,
+  };
+
+  const helpTitleStyle = {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    marginBottom: 4,
+  };
+
+  const helpDescriptionStyle = {
+    fontSize: 14,
+    color: isDarkMode ? '#94a3b8' : '#64748B',
+  };
+
+  const faqQuestionStyle = {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    marginBottom: 8,
+  };
+
+  const faqAnswerStyle = {
+    fontSize: 14,
+    color: isDarkMode ? '#94a3b8' : '#64748B',
+    lineHeight: 20,
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={containerStyle}>
+      <View style={headerStyle}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#0F172A" />
+          <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Help & Support</Text>
+        <Text style={headerTitleStyle}>Help & Support</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Get Help</Text>
+        <View style={sectionStyle}>
+          <Text style={sectionTitleStyle}>Get Help</Text>
           
           <TouchableOpacity style={styles.helpItem} onPress={handleContactSupport}>
             <Ionicons name="mail" size={24} color={theme.colors.primary} />
             <View style={styles.helpInfo}>
-              <Text style={styles.helpTitle}>Contact Support</Text>
-              <Text style={styles.helpDescription}>
+              <Text style={helpTitleStyle}>Contact Support</Text>
+              <Text style={helpDescriptionStyle}>
                 Get help with your account or technical issues
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.helpItem} onPress={handleReportBug}>
             <Ionicons name="bug" size={24} color={theme.colors.primary} />
             <View style={styles.helpInfo}>
-              <Text style={styles.helpTitle}>Report a Bug</Text>
-              <Text style={styles.helpDescription}>
+              <Text style={helpTitleStyle}>Report a Bug</Text>
+              <Text style={helpDescriptionStyle}>
                 Found something that's not working? Let us know
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.helpItem} onPress={handleFeatureRequest}>
             <Ionicons name="bulb" size={24} color={theme.colors.primary} />
             <View style={styles.helpInfo}>
-              <Text style={styles.helpTitle}>Request a Feature</Text>
-              <Text style={styles.helpDescription}>
+              <Text style={helpTitleStyle}>Request a Feature</Text>
+              <Text style={helpDescriptionStyle}>
                 Have an idea to make DevCompare better?
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>FAQ</Text>
+        <View style={sectionStyle}>
+          <Text style={sectionTitleStyle}>FAQ</Text>
           
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>How do I save hackathons?</Text>
-            <Text style={styles.faqAnswer}>
+            <Text style={faqQuestionStyle}>How do I save hackathons?</Text>
+            <Text style={faqAnswerStyle}>
               Swipe left on any hackathon card in the feed to save it to your calendar and saved list.
             </Text>
           </View>
 
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>How often is data updated?</Text>
-            <Text style={styles.faqAnswer}>
+            <Text style={faqQuestionStyle}>How often is data updated?</Text>
+            <Text style={faqAnswerStyle}>
               We update hackathon data daily from Unstop and Devpost to ensure you have the latest information.
             </Text>
           </View>
 
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>Can I participate in multiple hackathons?</Text>
-            <Text style={styles.faqAnswer}>
+            <Text style={faqQuestionStyle}>Can I participate in multiple hackathons?</Text>
+            <Text style={faqAnswerStyle}>
               Yes! You can save and track multiple hackathons. Check each hackathon's rules for participation requirements.
             </Text>
           </View>

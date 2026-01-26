@@ -159,8 +159,11 @@ export const useFeedStore = create<FeedStore>((set, get) => ({
         filters
       );
 
+      // Shuffle the hackathons to mix platforms randomly
+      const shuffledHackathons = response.data.sort(() => Math.random() - 0.5);
+
       set({
-        hackathons: refresh ? response.data : [...currentHackathons, ...response.data],
+        hackathons: refresh ? shuffledHackathons : [...currentHackathons, ...shuffledHackathons],
         hasMore: response.hasMore,
         page: refresh ? 1 : page + 1,
         loading: false,
