@@ -1,0 +1,47 @@
+name: Scrape Hackathons
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        cd scrapers
+        pip install -r requirements.txt
+        
+    - name: Run Unstop scraper
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      run: |
+        cd scrapers
+        python unstop_scraper.py
+        
+    - name: Run Devpost scraper
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      run: |
+        cd scrapers
+        python devpost_scraper.py
+        
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "Scraping failed! Check the logs."
+        # Add notification logic here (email, Slack, etc.)
