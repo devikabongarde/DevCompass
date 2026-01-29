@@ -77,7 +77,7 @@ export const AuthScreen: React.FC = () => {
               <View style={styles.logoContainer}>
                 <Ionicons name="compass" size={48} color="white" />
               </View>
-              <Text style={styles.title}>DevCompare</Text>
+              <Text style={styles.title}>DevCompass</Text>
               <Text style={styles.subtitle}>
                 {isSignUp ? 'Create your account' : 'Welcome back'}
               </Text>
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
   },
   form: {
-    gap: 20,
+    marginBottom: 20,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
+    marginBottom: 20,
   },
   input: {
     flex: 1,
@@ -240,12 +241,13 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
     paddingHorizontal: 8,
+    marginBottom: 20,
   },
   errorText: {
     fontSize: 14,
     color: '#EF4444',
+    marginLeft: 8,
   },
   submitButton: {
     backgroundColor: 'white',
@@ -267,11 +269,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 32,
-    gap: 8,
   },
   footerText: {
     fontSize: 16,
     color: 'rgba(255,255,255,0.8)',
+    marginRight: 8,
   },
   footerLink: {
     fontSize: 16,

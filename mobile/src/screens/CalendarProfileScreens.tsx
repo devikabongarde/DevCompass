@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  FlatList,
+  Alert,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -351,7 +351,65 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Menu Items */}
+        {/* Quick Actions */}
+        <View style={{
+          backgroundColor: isDarkMode ? '#1e293b' : 'white',
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 12,
+          marginHorizontal: 16,
+        }}>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: isDarkMode ? '#f8fafc' : '#0F172A',
+            marginBottom: 16,
+          }}>
+            Quick Actions
+          </Text>
+          
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
+            }}
+            onPress={() => navigation.navigate('UserProfile' as never, { userId: user?.id } as never)}
+          >
+            <Ionicons name="person-outline" size={20} color={theme.colors.primary} />
+            <Text style={{
+              fontSize: 16,
+              color: isDarkMode ? '#f8fafc' : '#0F172A',
+              marginLeft: 12,
+              flex: 1,
+            }}>
+              View Full Profile
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 12,
+            }}
+            onPress={() => navigation.navigate('ConversationsScreen' as never)}
+          >
+            <Ionicons name="chatbubble-outline" size={20} color={theme.colors.primary} />
+            <Text style={{
+              fontSize: 16,
+              color: isDarkMode ? '#f8fafc' : '#0F172A',
+              marginLeft: 12,
+              flex: 1,
+            }}>
+              Messages
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
+          </TouchableOpacity>
+        </View>
         <View style={[styles.menuContainer, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
           <TouchableOpacity 
             style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}

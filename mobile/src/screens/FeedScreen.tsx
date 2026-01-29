@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { useFeedStore, useSavedStore, useThemeStore } from '../stores';
+import { useFeedStore, useSavedStore, useThemeStore, useTeammatesStore } from '../stores';
 import { theme } from '../theme';
 import { Hackathon } from '../types';
 
@@ -28,11 +28,15 @@ interface HackathonCardProps {
   hackathon: Hackathon;
   onSave: () => void;
   onPress: () => void;
+  onTeammate: () => void;
   isSaved: boolean;
+  isLookingForTeammates: boolean;
 }
 
-const HackathonCard: React.FC<HackathonCardProps> = ({ hackathon, onSave, onPress, isSaved }) => {
+const HackathonCard: React.FC<HackathonCardProps> = ({ hackathon, onSave, onPress, onTeammate, isSaved, isLookingForTeammates }) => {
   const { isDarkMode = false } = useThemeStore();
+  const navigation = useNavigation();
+  
   const formatDeadline = (deadline?: string) => {
     if (!deadline) return null;
     // For now, extract readable info from description
@@ -65,6 +69,15 @@ const HackathonCard: React.FC<HackathonCardProps> = ({ hackathon, onSave, onPres
           );
         }
         onSave(); // Toggle save state
+      } else if (nativeEvent.translationX > 100) {
+        // Right swipe - looking for teammates
+        if (isLookingForTeammates) {
+          // Already looking, navigate to teammates list
+          navigation.navigate('TeammatesListScreen' as never, { hackathon } as never);
+        } else {
+          // Not looking yet, show registration modal
+          onTeammate();
+        }
       }
     }
   };
@@ -102,6 +115,17 @@ const HackathonCard: React.FC<HackathonCardProps> = ({ hackathon, onSave, onPres
             {hackathon.platform_source.toUpperCase()}
           </Text>
         </View>
+
+        {/* Teammate Status Badge */}
+        {isLookingForTeammates && (
+          <TouchableOpacity 
+            style={styles.teammatesBadge}
+            onPress={() => navigation.navigate('TeammatesListScreen' as never, { hackathon } as never)}
+          >
+            <Ionicons name="people" size={16} color="white" />
+            <Text style={styles.teammatesText}>View teammates</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Save Button */}
         <TouchableOpacity style={styles.saveButton} onPress={onSave}>
@@ -184,12 +208,17 @@ export const FeedScreen: React.FC = () => {
   } = useFeedStore();
 
   const { saveHackathon, unsaveHackathon, isSaved } = useSavedStore();
+  const { checkTeammateStatus, isLookingFor } = useTeammatesStore();
 
   useEffect(() => {
     if (hackathons.length === 0) {
       loadHackathons(true);
     }
-  }, []);
+    // Check teammate status for visible hackathons
+    hackathons.forEach(hackathon => {
+      checkTeammateStatus(hackathon.id);
+    });
+  }, [hackathons.length]);
 
   const handleViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
@@ -219,12 +248,24 @@ export const FeedScreen: React.FC = () => {
     }
   };
 
+  const handleTeammate = (hackathon: Hackathon) => {
+    if (isLookingFor(hackathon.id)) {
+      // Already looking for teammates, show teammates list
+      navigation.navigate('TeammatesListScreen' as never, { hackathon } as never);
+    } else {
+      // Not looking yet, show registration modal
+      navigation.navigate('TeammateModal' as never, { hackathon } as never);
+    }
+  };
+
   const renderHackathon = ({ item }: { item: Hackathon }) => (
     <HackathonCard
       hackathon={item}
       onSave={() => handleSave(item)}
       onPress={() => handleHackathonPress(item)}
+      onTeammate={() => handleTeammate(item)}
       isSaved={isSaved(item.id)}
+      isLookingForTeammates={isLookingFor(item.id)}
     />
   );
 
@@ -265,7 +306,7 @@ export const FeedScreen: React.FC = () => {
       
       {/* Top Bar */}
       <View style={[styles.topBar, { backgroundColor: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(0,0,0,0.3)' }]}>
-        <Text style={styles.logo}>DevCompare</Text>
+        <Text style={styles.logo}>DevCompass</Text>
         <View style={styles.topBarRight}>
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="notifications-outline" size={24} color="white" />
@@ -561,5 +602,22 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  teammatesBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  teammatesText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
   },
 });

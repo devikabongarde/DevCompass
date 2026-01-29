@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AuthState, Profile, Hackathon, FeedFilters } from '../types';
+import { AuthState, Profile, Hackathon, FeedFilters, TeamSeeker, TeamInvite, Team } from '../types';
 import { authService, profileService } from '../services/supabase';
 
 // Theme Store
@@ -275,5 +275,119 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
   isSaved: (hackathonId: string) => {
     const { savedHackathons } = get();
     return savedHackathons.some(h => h.id === hackathonId);
+  },
+}));
+
+// Teammates Store
+interface TeammatesStore {
+  teamSeekers: TeamSeeker[];
+  invites: TeamInvite[];
+  teams: Team[];
+  lookingForTeammates: Set<string>;
+  loading: boolean;
+  error: string | null;
+  
+  loadTeammates: (hackathonId: string) => Promise<void>;
+  loadInvites: () => Promise<void>;
+  loadTeams: () => Promise<void>;
+  checkTeammateStatus: (hackathonId: string) => Promise<boolean>;
+  sendInvite: (toUserId: string, hackathonId: string, message?: string) => Promise<void>;
+  respondToInvite: (inviteId: string, status: 'accepted' | 'rejected') => Promise<void>;
+  isLookingFor: (hackathonId: string) => boolean;
+}
+
+export const useTeammatesStore = create<TeammatesStore>((set, get) => ({
+  teamSeekers: [],
+  invites: [],
+  teams: [],
+  lookingForTeammates: new Set(),
+  loading: false,
+  error: null,
+
+  loadTeammates: async (hackathonId: string) => {
+    try {
+      set({ loading: true, error: null });
+      const { teammatesService } = await import('../services/supabase');
+      const data = await teammatesService.getTeammates(hackathonId);
+      set({ teamSeekers: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+    }
+  },
+
+  loadInvites: async () => {
+    try {
+      set({ loading: true, error: null });
+      const { teammatesService } = await import('../services/supabase');
+      const data = await teammatesService.getInvites();
+      set({ invites: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+    }
+  },
+
+  loadTeams: async () => {
+    try {
+      set({ loading: true, error: null });
+      const { teammatesService } = await import('../services/supabase');
+      const data = await teammatesService.getUserTeams();
+      set({ teams: data, loading: false });
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+    }
+  },
+
+  sendInvite: async (toUserId: string, hackathonId: string, message?: string) => {
+    try {
+      const { teammatesService } = await import('../services/supabase');
+      await teammatesService.sendInvite(toUserId, hackathonId, message);
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
+  respondToInvite: async (inviteId: string, status: 'accepted' | 'rejected') => {
+    try {
+      const { teammatesService } = await import('../services/supabase');
+      await teammatesService.respondToInvite(inviteId, status);
+      
+      // Update local state
+      const { invites } = get();
+      set({
+        invites: invites.map(invite => 
+          invite.id === inviteId ? { ...invite, status } : invite
+        )
+      });
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
+  checkTeammateStatus: async (hackathonId: string) => {
+    try {
+      const { teammatesService } = await import('../services/supabase');
+      const isLooking = await teammatesService.isLookingForTeammates(hackathonId);
+      
+      const { lookingForTeammates } = get();
+      const newSet = new Set(lookingForTeammates);
+      if (isLooking) {
+        newSet.add(hackathonId);
+      } else {
+        newSet.delete(hackathonId);
+      }
+      set({ lookingForTeammates: newSet });
+      
+      return isLooking;
+    } catch (error: any) {
+      console.error('Error checking teammate status:', error);
+      return false;
+    }
+  },
+
+  isLookingFor: (hackathonId: string) => {
+    const { lookingForTeammates } = get();
+    return lookingForTeammates.has(hackathonId);
   },
 }));

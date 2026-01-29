@@ -469,15 +469,15 @@ export const HelpSupportScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
 
   const handleContactSupport = () => {
-    Linking.openURL('mailto:support@devcompare.app?subject=DevCompare Support');
+    Linking.openURL('mailto:support@devcompass.app?subject=DevCompass Support');
   };
 
   const handleReportBug = () => {
-    Linking.openURL('mailto:bugs@devcompare.app?subject=Bug Report');
+    Linking.openURL('mailto:bugs@devcompass.app?subject=Bug Report');
   };
 
   const handleFeatureRequest = () => {
-    Linking.openURL('mailto:features@devcompare.app?subject=Feature Request');
+    Linking.openURL('mailto:features@devcompass.app?subject=Feature Request');
   };
 
   const containerStyle = {
@@ -583,7 +583,7 @@ export const HelpSupportScreen: React.FC = () => {
             <View style={styles.helpInfo}>
               <Text style={helpTitleStyle}>Request a Feature</Text>
               <Text style={helpDescriptionStyle}>
-                Have an idea to make DevCompare better?
+                Have an idea to make DevCompass better?
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />

@@ -14,8 +14,17 @@ import { AuthScreen } from '../screens/AuthScreen';
 import { FeedScreen } from '../screens/FeedScreen';
 import { SavedScreen } from '../screens/SavedScreen';
 import { CalendarScreen, ProfileScreen } from '../screens/CalendarProfileScreens';
+import { PeopleScreen } from '../screens/PeopleScreen';
+import { TeammateModal } from '../screens/TeammateModal';
+import { TeammatesListScreen } from '../screens/TeammatesListScreen';
+import { ProfileSetupScreen } from '../screens/ProfileSetupScreen';
+import { ChatScreen } from '../screens/ChatScreen';
+import { UserProfileScreen } from '../screens/UserProfileScreen';
+import { EditProfileScreen } from '../screens/EditProfileScreen';
+import { ConversationsScreen } from '../screens/ConversationsScreen';
 import { HackathonDetailScreen } from '../screens/PlaceholderScreens';
 import { SavedHackathonsScreen, NotificationsScreen, SettingsScreen, HelpSupportScreen } from '../screens/ProfileScreens';
+import { FollowersScreen, FollowingScreen } from '../screens/FollowScreens';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -39,6 +48,9 @@ const MainTabs: React.FC = () => {
               break;
             case 'Calendar':
               iconName = focused ? 'calendar' : 'calendar-outline';
+              break;
+            case 'People':
+              iconName = focused ? 'people' : 'people-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -93,6 +105,7 @@ const MainTabs: React.FC = () => {
       <Tab.Screen name="Feed" component={FeedScreen} />
       <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
+      <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -105,7 +118,7 @@ const LoadingScreen: React.FC = () => (
 );
 
 export const AppNavigator: React.FC = () => {
-  const { user, loading, loadUser } = useAuthStore();
+  const { user, loading, loadUser, profile } = useAuthStore();
   const { isDarkMode = false } = useThemeStore();
 
   useEffect(() => {
@@ -125,44 +138,40 @@ export const AppNavigator: React.FC = () => {
         }}
       >
         {user ? (
-          <>
-            <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen 
-              name="HackathonDetail" 
-              component={HackathonDetailScreen}
-              options={{
-                headerShown: true,
-                headerTitle: '',
-                headerBackTitleVisible: false,
-                headerStyle: {
-                  backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface,
-                  shadowColor: 'transparent',
-                  elevation: 0,
-                },
-                headerTintColor: isDarkMode ? '#f8fafc' : theme.colors.text,
-              }}
-            />
-            <Stack.Screen 
-              name="SavedHackathons" 
-              component={SavedHackathonsScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="Notifications" 
-              component={NotificationsScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="Settings" 
-              component={SettingsScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="HelpSupport" 
-              component={HelpSupportScreen}
-              options={{ headerShown: false }}
-            />
-          </>
+          profile ? (
+            <>
+              <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen 
+                name="HackathonDetail" 
+                component={HackathonDetailScreen}
+                options={{
+                  headerShown: true,
+                  headerTitle: '',
+                  headerBackTitleVisible: false,
+                  headerStyle: {
+                    backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface,
+                    shadowColor: 'transparent',
+                    elevation: 0,
+                  },
+                  headerTintColor: isDarkMode ? '#f8fafc' : theme.colors.text,
+                }}
+              />
+              <Stack.Screen name="SavedHackathons" component={SavedHackathonsScreen} />
+              <Stack.Screen name="Notifications" component={NotificationsScreen} />
+              <Stack.Screen name="Settings" component={SettingsScreen} />
+              <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
+              <Stack.Screen name="TeammateModal" component={TeammateModal} options={{ presentation: 'modal' }} />
+              <Stack.Screen name="TeammatesListScreen" component={TeammatesListScreen} />
+              <Stack.Screen name="ChatScreen" component={ChatScreen} />
+              <Stack.Screen name="ConversationsScreen" component={ConversationsScreen} />
+              <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen name="Followers" component={FollowersScreen} />
+              <Stack.Screen name="Following" component={FollowingScreen} />
+            </>
+          ) : (
+            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+          )
         ) : (
           <Stack.Screen name="Auth" component={AuthScreen} />
         )}
