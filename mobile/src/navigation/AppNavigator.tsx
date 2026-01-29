@@ -25,6 +25,7 @@ import { ConversationsScreen } from '../screens/ConversationsScreen';
 import { HackathonDetailScreen } from '../screens/PlaceholderScreens';
 import { SavedHackathonsScreen, NotificationsScreen, SettingsScreen, HelpSupportScreen } from '../screens/ProfileScreens';
 import { FollowersScreen, FollowingScreen } from '../screens/FollowScreens';
+import { TeamDetailScreen } from '../screens/TeamDetailScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -168,6 +169,7 @@ export const AppNavigator: React.FC = () => {
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
               <Stack.Screen name="Followers" component={FollowersScreen} />
               <Stack.Screen name="Following" component={FollowingScreen} />
+              <Stack.Screen name="TeamDetail" component={TeamDetailScreen} />
             </>
           ) : (
             <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />

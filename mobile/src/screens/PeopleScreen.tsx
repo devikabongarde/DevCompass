@@ -219,7 +219,7 @@ export const PeopleScreen: React.FC = () => {
   const renderTeam = ({ item }: { item: Team }) => (
     <TouchableOpacity
       style={cardStyle}
-      onPress={() => navigation.navigate('ChatScreen' as never, { teamId: item.id } as never)}
+      onPress={() => navigation.navigate('TeamDetail' as never, { team: item } as never)}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
         <Ionicons 

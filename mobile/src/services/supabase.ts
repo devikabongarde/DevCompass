@@ -203,9 +203,16 @@ export const teammatesService = {
     return !!data && !error;
   },
 
-  async lookingForTeammates(hackathonId: string, skills: string[], bio?: string, lookingFor?: string): Promise<TeamSeeker> {
+  async lookingForTeammates(hackathonId: string, skills?: string[], bio?: string, lookingFor?: string): Promise<TeamSeeker> {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) throw new Error('User not authenticated');
+    
+    // Get user profile to use existing data
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('skills, bio')
+      .eq('id', userId)
+      .single();
     
     const { data: existing } = await supabase
       .from('team_seekers')
@@ -223,8 +230,8 @@ export const teammatesService = {
       .insert({
         user_id: userId,
         hackathon_id: hackathonId,
-        skills,
-        bio,
+        skills: skills || profile?.skills || [],
+        bio: bio || profile?.bio || '',
         looking_for: lookingFor
       })
       .select('*')
@@ -339,11 +346,23 @@ export const teammatesService = {
     
     if (error) throw error;
     
-    // If invite is accepted, create initial message and follow user
+    // If invite is accepted, create team and add both users
     if (status === 'accepted') {
       const currentUserId = (await supabase.auth.getUser()).data.user?.id;
       if (currentUserId) {
         try {
+          // Create team with both users
+          const { data: team } = await supabase
+            .from('teams')
+            .insert({
+              hackathon_id: data.hackathon_id,
+              name: 'New Team',
+              leader_id: data.from_user_id,
+              members: [data.from_user_id, currentUserId]
+            })
+            .select('*')
+            .single();
+          
           // Create welcome message
           await supabase
             .from('messages')
@@ -371,12 +390,36 @@ export const teammatesService = {
               });
           }
         } catch (msgError) {
-          console.error('Error creating message/follow:', msgError);
+          console.error('Error creating team/message/follow:', msgError);
         }
       }
     }
     
     return data;
+  },
+
+  async getFollowingForHackathon(hackathonId: string): Promise<any[]> {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) return [];
+    
+    const { data: following } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', userId);
+    
+    if (!following?.length) return [];
+    
+    const followingIds = following.map(f => f.following_id);
+    
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', followingIds);
+    
+    return (profiles || []).map(profile => ({
+      ...profile,
+      isFollowing: true
+    }));
   },
 
   async getUserTeams(): Promise<Team[]> {
@@ -385,12 +428,53 @@ export const teammatesService = {
     
     const { data, error } = await supabase
       .from('teams')
-      .select('*')
+      .select(`
+        *,
+        hackathon:hackathons(*)
+      `)
       .contains('members', [userId])
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    
+    // Get member profiles for each team
+    const teamsWithProfiles = await Promise.all(
+      (data || []).map(async (team) => {
+        const memberProfiles = await Promise.all(
+          team.members.map(async (memberId: string) => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', memberId)
+              .single();
+            return profile;
+          })
+        );
+        
+        return {
+          ...team,
+          member_profiles: memberProfiles.filter(Boolean)
+        };
+      })
+    );
+    
+    return teamsWithProfiles;
+  },
+
+  async updateTeamName(teamId: string, name: string): Promise<Team> {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) throw new Error('User not authenticated');
+    
+    const { data, error } = await supabase
+      .from('teams')
+      .update({ name })
+      .eq('id', teamId)
+      .eq('leader_id', userId)
+      .select('*')
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
 };
 

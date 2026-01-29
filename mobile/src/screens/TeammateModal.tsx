@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useThemeStore, useAuthStore, useTeammatesStore } from '../stores';
-import { teammatesService } from '../services/supabase';
+import { teammatesService, profileService } from '../services/supabase';
 import { theme } from '../theme';
 import { Hackathon } from '../types';
 
@@ -35,6 +35,27 @@ export const TeammateModal: React.FC = () => {
   const [bio, setBio] = useState('');
   const [lookingFor, setLookingFor] = useState('');
   const [loading, setLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+
+  const loadProfileData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const profile = await profileService.getProfile(user.id);
+      if (profile) {
+        setSkills(profile.skills || []);
+        setBio(profile.bio || '');
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setProfileLoaded(true);
+    }
+  };
 
   const toggleSkill = (skill: string) => {
     setSkills(prev => 
@@ -45,16 +66,11 @@ export const TeammateModal: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (skills.length === 0) {
-      Alert.alert('Skills Required', 'Please select at least one skill');
-      return;
-    }
-
     setLoading(true);
     try {
       await teammatesService.lookingForTeammates(
         hackathon.id,
-        skills,
+        skills.length > 0 ? skills : undefined,
         bio || undefined,
         lookingFor || undefined
       );
@@ -169,7 +185,14 @@ export const TeammateModal: React.FC = () => {
             </View>
 
             <View style={{ marginBottom: 24 }}>
-              <Text style={sectionTitleStyle}>Your Skills *</Text>
+              <Text style={sectionTitleStyle}>Your Skills</Text>
+              <Text style={{
+                fontSize: 14,
+                color: isDarkMode ? '#94a3b8' : '#64748B',
+                marginBottom: 12,
+              }}>
+                {profileLoaded ? 'Using skills from your profile. Tap to modify:' : 'Loading your profile...'}
+              </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {COMMON_SKILLS.map((skill) => (
                   <TouchableOpacity
@@ -187,6 +210,13 @@ export const TeammateModal: React.FC = () => {
 
             <View style={{ marginBottom: 24 }}>
               <Text style={sectionTitleStyle}>About You</Text>
+              <Text style={{
+                fontSize: 14,
+                color: isDarkMode ? '#94a3b8' : '#64748B',
+                marginBottom: 8,
+              }}>
+                {profileLoaded ? 'Using bio from your profile. Edit if needed:' : 'Loading...'}
+              </Text>
               <TextInput
                 style={[inputStyle, { height: 80 }]}
                 placeholder="Tell potential teammates about yourself..."

@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useThemeStore } from '../stores';
-import { teammatesService } from '../services/supabase';
+import { teammatesService, followService } from '../services/supabase';
 import { theme } from '../theme';
 import { TeamSeeker, Hackathon } from '../types';
 
@@ -22,6 +22,8 @@ export const TeammatesListScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
   
   const [teammates, setTeammates] = useState<TeamSeeker[]>([]);
+  const [following, setFollowing] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'seekers' | 'following'>('seekers');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,8 +32,12 @@ export const TeammatesListScreen: React.FC = () => {
 
   const loadTeammates = async () => {
     try {
-      const data = await teammatesService.getTeammates(hackathon.id);
-      setTeammates(data);
+      const [seekersData, followingData] = await Promise.all([
+        teammatesService.getTeammates(hackathon.id),
+        teammatesService.getFollowingForHackathon(hackathon.id)
+      ]);
+      setTeammates(seekersData);
+      setFollowing(followingData);
     } catch (error) {
       console.error('Error loading teammates:', error);
     } finally {
@@ -39,10 +45,10 @@ export const TeammatesListScreen: React.FC = () => {
     }
   };
 
-  const handleSendInvite = async (teammate: TeamSeeker) => {
+  const handleSendInvite = async (userId: string, fullName: string) => {
     try {
-      await teammatesService.sendInvite(teammate.user_id, hackathon.id, 'Let\'s team up!');
-      Alert.alert('Invite Sent!', `Your team invite has been sent to ${teammate.profile?.full_name}`);
+      await teammatesService.sendInvite(userId, hackathon.id, 'Let\'s team up!');
+      Alert.alert('Invite Sent!', `Your team invite has been sent to ${fullName}`);
     } catch (error) {
       console.error('Error sending invite:', error);
       Alert.alert('Error', 'Failed to send invite');
@@ -108,6 +114,68 @@ export const TeammatesListScreen: React.FC = () => {
         </Text>
       )}
 
+        <TouchableOpacity
+          style={{
+            backgroundColor: theme.colors.primary,
+            paddingVertical: 10,
+            borderRadius: 8,
+            alignItems: 'center',
+          }}
+          onPress={() => handleSendInvite(item.user_id, item.profile?.full_name || 'User')}
+        >
+          <Text style={{ color: 'white', fontWeight: '600' }}>Send Invite</Text>
+        </TouchableOpacity>
+    </View>
+  );
+
+  const renderFollowing = ({ item }: { item: any }) => (
+    <View style={{
+      backgroundColor: isDarkMode ? '#1e293b' : 'white',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+        <View style={{
+          width: 50,
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: theme.colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 12,
+        }}>
+          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
+            {item.full_name?.charAt(0) || 'U'}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: isDarkMode ? '#f8fafc' : '#0F172A',
+          }}>
+            {item.full_name}
+          </Text>
+          <Text style={{
+            fontSize: 14,
+            color: isDarkMode ? '#94a3b8' : '#64748B',
+          }}>
+            @{item.username} • {item.skills?.join(', ') || 'No skills listed'}
+          </Text>
+        </View>
+      </View>
+      
+      {item.bio && (
+        <Text style={{
+          fontSize: 14,
+          color: isDarkMode ? '#94a3b8' : '#64748B',
+          marginBottom: 12,
+        }}>
+          {item.bio}
+        </Text>
+      )}
+
       <TouchableOpacity
         style={{
           backgroundColor: theme.colors.primary,
@@ -115,9 +183,9 @@ export const TeammatesListScreen: React.FC = () => {
           borderRadius: 8,
           alignItems: 'center',
         }}
-        onPress={() => handleSendInvite(item)}
+        onPress={() => handleSendInvite(item.id, item.full_name)}
       >
-        <Text style={{ color: 'white', fontWeight: '600' }}>Send Invite</Text>
+        <Text style={{ color: 'white', fontWeight: '600' }}>Invite to Team</Text>
       </TouchableOpacity>
     </View>
   );
@@ -145,7 +213,7 @@ export const TeammatesListScreen: React.FC = () => {
           color: isDarkMode ? '#f8fafc' : '#0F172A',
           marginLeft: 16,
         }}>
-          Looking for Teammates
+          Find Teammates
         </Text>
       </View>
 
@@ -158,15 +226,59 @@ export const TeammatesListScreen: React.FC = () => {
           For: {hackathon.title}
         </Text>
 
+        {/* Tab Buttons */}
+        <View style={{
+          flexDirection: 'row',
+          backgroundColor: isDarkMode ? '#334155' : '#F1F5F9',
+          borderRadius: 8,
+          padding: 4,
+          marginBottom: 16,
+        }}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 6,
+              backgroundColor: activeTab === 'seekers' ? theme.colors.primary : 'transparent',
+              alignItems: 'center',
+            }}
+            onPress={() => setActiveTab('seekers')}
+          >
+            <Text style={{
+              color: activeTab === 'seekers' ? 'white' : (isDarkMode ? '#f8fafc' : '#64748B'),
+              fontWeight: '600',
+            }}>
+              Looking for Teams ({teammates.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 6,
+              backgroundColor: activeTab === 'following' ? theme.colors.primary : 'transparent',
+              alignItems: 'center',
+            }}
+            onPress={() => setActiveTab('following')}
+          >
+            <Text style={{
+              color: activeTab === 'following' ? 'white' : (isDarkMode ? '#f8fafc' : '#64748B'),
+              fontWeight: '600',
+            }}>
+              People You Follow ({following.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {loading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         ) : (
           <FlatList
-            data={teammates}
-            renderItem={renderTeammate}
-            keyExtractor={(item) => item.id}
+            data={activeTab === 'seekers' ? teammates : following}
+            renderItem={activeTab === 'seekers' ? renderTeammate : renderFollowing}
+            keyExtractor={(item) => activeTab === 'seekers' ? item.id : item.id}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={() => (
               <View style={{ alignItems: 'center', paddingVertical: 40 }}>
@@ -177,7 +289,9 @@ export const TeammatesListScreen: React.FC = () => {
                   textAlign: 'center',
                   marginTop: 12,
                 }}>
-                  No teammates looking yet{'\n'}Be the first to find teammates!
+                  {activeTab === 'seekers' 
+                    ? 'No teammates looking yet\nBe the first to find teammates!' 
+                    : 'No one you follow yet\nFollow people to invite them to teams!'}
                 </Text>
               </View>
             )}

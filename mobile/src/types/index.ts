@@ -145,6 +145,7 @@ export type RootStackParamList = {
   Followers: { userId: string };
   Following: { userId: string };
   Onboarding: undefined;
+  TeamDetail: { team: Team };
 };
 
 export type MainTabParamList = {
