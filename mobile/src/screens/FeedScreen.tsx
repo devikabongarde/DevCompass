@@ -34,7 +34,7 @@ export const FeedScreen: React.FC = () => {
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  
+
   const {
     hackathons,
     loading,
@@ -88,7 +88,7 @@ export const FeedScreen: React.FC = () => {
 
   const handleSendToUser = async (userId: string, userName: string) => {
     if (!selectedHackathon) return;
-    
+
     try {
       await messageService.sendMessage(
         userId,
@@ -178,10 +178,18 @@ export const FeedScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
+
       {/* Top Bar */}
       <View style={[styles.topBar, { backgroundColor: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(0,0,0,0.3)' }]}>
-        <Text style={styles.logo}>DevCompass</Text>
+        <View style={styles.topBarLeft}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => (navigation as any).openDrawer()}
+          >
+            <Ionicons name="menu" size={28} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.logo}>DevCompass</Text>
+        </View>
         <View style={styles.topBarRight}>
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="notifications-outline" size={24} color="white" />
@@ -314,6 +322,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
+  },
+  topBarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   topBarRight: {
     flexDirection: 'row',

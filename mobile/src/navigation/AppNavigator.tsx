@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
 
 import { useAuthStore, useThemeStore, useFeedStore } from '../stores';
 import { theme } from '../theme';
@@ -22,18 +24,159 @@ import { ChatScreen } from '../screens/ChatScreen';
 import { UserProfileScreen } from '../screens/UserProfileScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { ConversationsScreen } from '../screens/ConversationsScreen';
-import { HackathonDetailScreen } from '../screens/PlaceholderScreens';
 import { SavedHackathonsScreen, NotificationsScreen, SettingsScreen, HelpSupportScreen } from '../screens/ProfileScreens';
 import { FollowersScreen, FollowingScreen } from '../screens/FollowScreens';
 import { TeamDetailScreen } from '../screens/TeamDetailScreen';
+import { HackathonDetailScreen } from '../screens/HackathonDetailScreen';
+
+// New feature screens
+import {
+  RoleMatcherScreen,
+  HackathonRecommendationsScreen,
+  SynergyScoreScreen,
+  GitHubImportScreen,
+  PortfolioModesScreen,
+  PrivacyControlsScreen,
+  ContentLanesScreen,
+  ProjectDemosScreen,
+  FeedControlsScreen,
+  TeamChannelsScreen,
+  TaskBoardScreen,
+  MentorHubScreen,
+  TimelineViewScreen,
+  SmartRemindersScreen,
+  DevpostGeneratorScreen,
+  HackathonMapScreen,
+  CommunitiesScreen,
+  ReputationBadgesScreen,
+  ProjectCopilotScreen,
+  PersonalityMatcherScreen,
+  RetroAnalyticsScreen,
+} from '../screens/PlaceholderScreens';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const Drawer = createDrawerNavigator();
+
+// Custom Drawer Content
+const CustomDrawerContent = (props: any) => {
+  const { isDarkMode = false } = useThemeStore();
+
+  const menuSections = [
+    {
+      title: '🎯 Smart Matching & RecSys',
+      items: [
+        { name: 'Role-Aware Recommender', screen: 'RoleMatcher', icon: 'people-circle' },
+        { name: 'Hackathon Recommendations', screen: 'HackathonRecommendations', icon: 'trophy' },
+        { name: 'Team Synergy Score', screen: 'SynergyScore', icon: 'analytics' },
+      ],
+    },
+    {
+      title: '👤 Dev Profile Features',
+      items: [
+        { name: 'GitHub Profile Import', screen: 'GitHubImport', icon: 'logo-github' },
+        { name: 'Portfolio Modes', screen: 'PortfolioModes', icon: 'briefcase' },
+        { name: 'Privacy Controls', screen: 'PrivacyControls', icon: 'shield-checkmark' },
+      ],
+    },
+    {
+      title: '📱 Social Feed',
+      items: [
+        { name: 'Content Lanes', screen: 'ContentLanes', icon: 'layers' },
+        { name: 'Project Demos', screen: 'ProjectDemos', icon: 'videocam' },
+        { name: 'Feed Controls', screen: 'FeedControls', icon: 'options' },
+      ],
+    },
+    {
+      title: '🤝 Team & Communication',
+      items: [
+        { name: 'Team Channels', screen: 'TeamChannels', icon: 'chatbubbles' },
+        { name: 'Task Board', screen: 'TaskBoard', icon: 'checkbox' },
+        { name: 'Mentor Hub', screen: 'MentorHub', icon: 'school' },
+      ],
+    },
+    {
+      title: '⏰ Hackathon Ops',
+      items: [
+        { name: 'Unified Timeline', screen: 'TimelineView', icon: 'time' },
+        { name: 'Smart Reminders', screen: 'SmartReminders', icon: 'notifications' },
+        { name: 'Devpost Generator', screen: 'DevpostGenerator', icon: 'document-text' },
+      ],
+    },
+    {
+      title: '🌍 Discovery & Community',
+      items: [
+        { name: 'Hackathon Map', screen: 'HackathonMap', icon: 'map' },
+        { name: 'Communities', screen: 'Communities', icon: 'people' },
+        { name: 'Reputation & Badges', screen: 'ReputationBadges', icon: 'medal' },
+      ],
+    },
+    {
+      title: '🤖 AI Assistant',
+      items: [
+        { name: 'Project Copilot', screen: 'ProjectCopilot', icon: 'bulb' },
+        { name: 'Personality Matcher', screen: 'PersonalityMatcher', icon: 'happy' },
+        { name: 'Retro & Analytics', screen: 'RetroAnalytics', icon: 'stats-chart' },
+      ],
+    },
+  ];
+
+  return (
+    <ScrollView
+      style={[styles.drawerContainer, { backgroundColor: isDarkMode ? '#1e293b' : '#fff' }]}
+      contentContainerStyle={styles.drawerContent}
+    >
+      {/* Header */}
+      <View style={[styles.drawerHeader, { backgroundColor: isDarkMode ? '#334155' : theme.colors.primary }]}>
+        <Text style={styles.drawerHeaderText}>DevCompass</Text>
+        <Text style={styles.drawerHeaderSubtext}>Pro Features</Text>
+      </View>
+
+      {/* Menu Sections */}
+      {menuSections.map((section, sectionIndex) => (
+        <View key={sectionIndex} style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#94a3b8' : '#64748b' }]}>
+            {section.title}
+          </Text>
+          {section.items.map((item, itemIndex) => (
+            <TouchableOpacity
+              key={itemIndex}
+              style={[styles.menuItem, { backgroundColor: isDarkMode ? '#1e293b' : '#fff' }]}
+              onPress={() => props.navigation.navigate(item.screen)}
+            >
+              <Ionicons
+                name={item.icon as any}
+                size={20}
+                color={isDarkMode ? '#94a3b8' : theme.colors.primary}
+              />
+              <Text style={[styles.menuItemText, { color: isDarkMode ? '#f1f5f9' : theme.colors.text }]}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ))}
+
+      {/* Footer */}
+      <View style={styles.drawerFooter}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => props.navigation.closeDrawer()}
+        >
+          <Ionicons name="close-circle" size={24} color={theme.colors.textLight} />
+          <Text style={[styles.closeButtonText, { color: isDarkMode ? '#94a3b8' : theme.colors.textLight }]}>
+            Close Menu
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
 
 const MainTabs: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
   const { refresh } = useFeedStore();
-  
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -112,6 +255,66 @@ const MainTabs: React.FC = () => {
   );
 };
 
+// Drawer Navigator with Main Tabs
+const DrawerNavigator: React.FC = () => {
+  const { isDarkMode = false } = useThemeStore();
+
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerShown: false, // Hide all headers by default
+        drawerStyle: {
+          backgroundColor: isDarkMode ? '#1e293b' : '#fff',
+          width: 300,
+        },
+      }}
+    >
+      <Drawer.Screen
+        name="Home"
+        component={MainTabs}
+        options={{
+          headerShown: false, // No header for main tabs
+        }}
+      />
+      {/* Smart Matching & RecSys */}
+      <Drawer.Screen name="RoleMatcher" component={RoleMatcherScreen} options={{ title: 'Role-Aware Recommender' }} />
+      <Drawer.Screen name="HackathonRecommendations" component={HackathonRecommendationsScreen} options={{ title: 'Hackathon Recommendations' }} />
+      <Drawer.Screen name="SynergyScore" component={SynergyScoreScreen} options={{ title: 'Team Synergy Score' }} />
+
+      {/* Dev Profile Features */}
+      <Drawer.Screen name="GitHubImport" component={GitHubImportScreen} options={{ title: 'GitHub Import' }} />
+      <Drawer.Screen name="PortfolioModes" component={PortfolioModesScreen} options={{ title: 'Portfolio Modes' }} />
+      <Drawer.Screen name="PrivacyControls" component={PrivacyControlsScreen} options={{ title: 'Privacy Controls' }} />
+
+      {/* Social Feed */}
+      <Drawer.Screen name="ContentLanes" component={ContentLanesScreen} options={{ title: 'Content Lanes' }} />
+      <Drawer.Screen name="ProjectDemos" component={ProjectDemosScreen} options={{ title: 'Project Demos' }} />
+      <Drawer.Screen name="FeedControls" component={FeedControlsScreen} options={{ title: 'Feed Controls' }} />
+
+      {/* Team & Communication */}
+      <Drawer.Screen name="TeamChannels" component={TeamChannelsScreen} options={{ title: 'Team Channels' }} />
+      <Drawer.Screen name="TaskBoard" component={TaskBoardScreen} options={{ title: 'Task Board' }} />
+      <Drawer.Screen name="MentorHub" component={MentorHubScreen} options={{ title: 'Mentor Hub' }} />
+
+      {/* Hackathon Ops */}
+      <Drawer.Screen name="TimelineView" component={TimelineViewScreen} options={{ title: 'Unified Timeline' }} />
+      <Drawer.Screen name="SmartReminders" component={SmartRemindersScreen} options={{ title: 'Smart Reminders' }} />
+      <Drawer.Screen name="DevpostGenerator" component={DevpostGeneratorScreen} options={{ title: 'Devpost Generator' }} />
+
+      {/* Discovery & Community */}
+      <Drawer.Screen name="HackathonMap" component={HackathonMapScreen} options={{ title: 'Hackathon Map' }} />
+      <Drawer.Screen name="Communities" component={CommunitiesScreen} options={{ title: 'Communities' }} />
+      <Drawer.Screen name="ReputationBadges" component={ReputationBadgesScreen} options={{ title: 'Reputation & Badges' }} />
+
+      {/* AI Assistant */}
+      <Drawer.Screen name="ProjectCopilot" component={ProjectCopilotScreen} options={{ title: 'AI Project Copilot' }} />
+      <Drawer.Screen name="PersonalityMatcher" component={PersonalityMatcherScreen} options={{ title: 'Personality Matcher' }} />
+      <Drawer.Screen name="RetroAnalytics" component={RetroAnalyticsScreen} options={{ title: 'Retro & Analytics' }} />
+    </Drawer.Navigator>
+  );
+};
+
 const LoadingScreen: React.FC = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
     <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -141,9 +344,9 @@ export const AppNavigator: React.FC = () => {
         {user ? (
           profile ? (
             <>
-              <Stack.Screen name="Main" component={MainTabs} />
-              <Stack.Screen 
-                name="HackathonDetail" 
+              <Stack.Screen name="Main" component={DrawerNavigator} />
+              <Stack.Screen
+                name="HackathonDetail"
                 component={HackathonDetailScreen}
                 options={{
                   headerShown: true,
@@ -181,3 +384,68 @@ export const AppNavigator: React.FC = () => {
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  drawerContainer: {
+    flex: 1,
+  },
+  drawerContent: {
+    paddingBottom: 20,
+  },
+  drawerHeader: {
+    padding: 20,
+    paddingTop: 50,
+    marginBottom: 10,
+  },
+  drawerHeaderText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  drawerHeaderSubtext: {
+    fontSize: 14,
+    color: '#e2e8f0',
+    marginTop: 4,
+  },
+  section: {
+    marginBottom: 20,
+    paddingHorizontal: 16,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  menuItemText: {
+    fontSize: 15,
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+  drawerFooter: {
+    marginTop: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  closeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  closeButtonText: {
+    fontSize: 14,
+    marginLeft: 8,
+    fontWeight: '600',
+  },
+});
