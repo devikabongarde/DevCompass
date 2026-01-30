@@ -244,10 +244,22 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
       if (!user) throw new Error('Must be logged in to save hackathons');
 
       const { savedHackathonService } = await import('../services/supabase');
-      await savedHackathonService.saveHackathon(user.id, hackathon.id);
+      try {
+        await savedHackathonService.saveHackathon(user.id, hackathon.id);
+      } catch (error: any) {
+        // Ignore duplicate key constraint error - hackathon already saved
+        if (error.code === '23505') {
+          console.log('Hackathon already saved');
+          return;
+        }
+        throw error;
+      }
       
       const { savedHackathons } = get();
-      set({ savedHackathons: [hackathon, ...savedHackathons] });
+      // Check if already in the list
+      if (!savedHackathons.some(h => h.id === hackathon.id)) {
+        set({ savedHackathons: [hackathon, ...savedHackathons] });
+      }
     } catch (error: any) {
       set({ error: error.message });
       throw error;

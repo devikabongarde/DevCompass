@@ -219,7 +219,7 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
           <Ionicons
             name={liked ? 'heart' : 'heart-outline'}
             size={28}
-            color={liked ? '#EF4444' : 'white'}
+            color={liked ? '#EF4444' : (isDarkMode ? 'white' : theme.colors.primary)}
           />
         </TouchableOpacity>
         
@@ -227,7 +227,7 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
           <Ionicons
             name={saved ? 'bookmark' : 'bookmark-outline'}
             size={28}
-            color={saved ? theme.colors.secondary : 'white'}
+            color={saved ? theme.colors.secondary : (isDarkMode ? 'white' : theme.colors.primary)}
           />
         </TouchableOpacity>
         
@@ -235,7 +235,7 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
           <Ionicons
             name="paper-plane-outline"
             size={28}
-            color="white"
+            color={isDarkMode ? 'white' : theme.colors.primary}
           />
         </TouchableOpacity>
       </View>

@@ -90,6 +90,19 @@ export const profileService = {
       .single();
     
     if (error && error.code !== 'PGRST116') throw error;
+    
+    if (!data) return null;
+
+    // Get followers count
+    const { data: followsData, error: followsError } = await supabase
+      .from('follows')
+      .select('follower_id', { count: 'exact' })
+      .eq('following_id', userId);
+    
+    if (!followsError) {
+      data.followers_count = followsData?.length ?? 0;
+    }
+
     return data;
   },
 
@@ -101,6 +114,19 @@ export const profileService = {
       .single();
     
     if (error && error.code !== 'PGRST116') throw error;
+    
+    if (!data) return null;
+
+    // Get followers count
+    const { data: followsData, error: followsError } = await supabase
+      .from('follows')
+      .select('follower_id', { count: 'exact' })
+      .eq('following_id', data.id);
+    
+    if (!followsError) {
+      data.followers_count = followsData?.length ?? 0;
+    }
+
     return data;
   },
 

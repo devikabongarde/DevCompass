@@ -57,18 +57,12 @@ export const UserProfileScreen: React.FC = () => {
       if (isFollowing) {
         await followService.unfollowUser(userId);
         setIsFollowing(false);
-        setProfile(prev => prev ? {
-          ...prev,
-          followers_count: Math.max(0, prev.followers_count - 1)
-        } : null);
       } else {
         await followService.followUser(userId);
         setIsFollowing(true);
-        setProfile(prev => prev ? {
-          ...prev,
-          followers_count: prev.followers_count + 1
-        } : null);
       }
+      // Reload profile to get updated followers count from server
+      await loadProfile();
     } catch (error) {
       console.error('Error following/unfollowing:', error);
       Alert.alert('Error', 'Failed to update follow status');
@@ -243,7 +237,7 @@ export const UserProfileScreen: React.FC = () => {
                 fontWeight: 'bold',
                 color: isDarkMode ? '#f8fafc' : '#0F172A',
               }}>
-                {profile.followers_count}
+                {profile.followers_count ?? 0}
               </Text>
               <Text style={{
                 fontSize: 14,
