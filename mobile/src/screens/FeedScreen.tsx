@@ -92,7 +92,7 @@ export const FeedScreen: React.FC = () => {
     try {
       await messageService.sendMessage(
         userId,
-        `Check out this hackathon: ${selectedHackathon.title}\n\n${selectedHackathon.short_summary || selectedHackathon.description}`,
+        `Check out this hackathon: ${selectedHackathon.title}\n\n${selectedHackathon.short_summary || selectedHackathon.description}\n\nRegister: ${selectedHackathon.original_url}`,
         undefined,
         selectedHackathon.id
       );

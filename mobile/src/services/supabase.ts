@@ -690,7 +690,7 @@ export const messageService = {
         to_user_id: toUserId,
         team_id: teamId,
         content: messageContent,
-        message_type: hackathonId ? 'hackathon_share' : 'text'
+        message_type: 'text'
       })
       .select()
       .single();

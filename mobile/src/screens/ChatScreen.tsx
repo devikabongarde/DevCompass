@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,12 +65,16 @@ export const ChatScreen: React.FC = () => {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isMe = item.from_user_id === user?.id;
-    const isHackathonShare = item.message_type === 'hackathon_share';
     
     // Extract hackathon ID from content
     const hackathonIdMatch = item.content.match(/\[HACKATHON:([^\]]+)\]/);
     const hackathonId = hackathonIdMatch ? hackathonIdMatch[1] : null;
-    const displayContent = item.content.replace(/\[HACKATHON:[^\]]+\]/, '').trim();
+    const isHackathonShare = !!hackathonId;
+    let displayContent = item.content.replace(/\[HACKATHON:[^\]]+\]/, '').trim();
+    
+    // Extract URL from content
+    const urlMatch = displayContent.match(/(https?:\/\/[^\s]+)/);
+    const url = urlMatch ? urlMatch[1] : null;
     
     const handleHackathonPress = async () => {
       if (hackathonId) {
@@ -79,6 +85,66 @@ export const ChatScreen: React.FC = () => {
           console.error('Error loading hackathon:', error);
         }
       }
+    };
+    
+    const handleUrlPress = async () => {
+      if (url) {
+        try {
+          const supported = await Linking.canOpenURL(url);
+          if (supported) {
+            await Linking.openURL(url);
+          } else {
+            Alert.alert('Error', 'Cannot open this URL');
+          }
+        } catch (error) {
+          console.error('Error opening URL:', error);
+          Alert.alert('Error', 'Failed to open link');
+        }
+      }
+    };
+    
+    // Split content into text and URL parts
+    const renderContent = () => {
+      if (!url) {
+        return (
+          <Text style={{
+            color: isHackathonShare ? 'white' : isMe ? 'white' : (isDarkMode ? '#f8fafc' : '#0F172A'),
+            fontSize: 16,
+          }}>
+            {displayContent}
+          </Text>
+        );
+      }
+      
+      const parts = displayContent.split(url);
+      return (
+        <View>
+          <Text style={{
+            color: isHackathonShare ? 'white' : isMe ? 'white' : (isDarkMode ? '#f8fafc' : '#0F172A'),
+            fontSize: 16,
+          }}>
+            {parts[0]}
+          </Text>
+          <TouchableOpacity onPress={handleUrlPress}>
+            <Text style={{
+              color: '#60a5fa',
+              fontSize: 16,
+              textDecorationLine: 'underline',
+              marginTop: 4,
+            }}>
+              {url}
+            </Text>
+          </TouchableOpacity>
+          {parts[1] && (
+            <Text style={{
+              color: isHackathonShare ? 'white' : isMe ? 'white' : (isDarkMode ? '#f8fafc' : '#0F172A'),
+              fontSize: 16,
+            }}>
+              {parts[1]}
+            </Text>
+          )}
+        </View>
+      );
     };
     
     return (
@@ -124,12 +190,7 @@ export const ChatScreen: React.FC = () => {
             </View>
           )}
           
-          <Text style={{
-            color: isHackathonShare ? 'white' : isMe ? 'white' : (isDarkMode ? '#f8fafc' : '#0F172A'),
-            fontSize: 16,
-          }}>
-            {displayContent}
-          </Text>
+          {renderContent()}
           
           {isHackathonShare && (
             <Text style={{
