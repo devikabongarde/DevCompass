@@ -722,7 +722,7 @@ export const messageService = {
       .from('messages')
       .insert({
         from_user_id: userId,
-        to_user_id: toUserId,
+        to_user_id: toUserId || null,
         team_id: teamId,
         content: messageContent,
         message_type: 'text'

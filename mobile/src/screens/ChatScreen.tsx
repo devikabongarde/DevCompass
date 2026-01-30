@@ -87,7 +87,13 @@ export const ChatScreen: React.FC = () => {
 
   const loadData = async () => {
     try {
-      if (userId) {
+      if (teamId) {
+        // Team chat - fetch team name and messages
+        setOtherUser({ full_name: 'Team Chat', username: '', id: teamId } as any);
+        const msgs = await messageService.getMessages('', teamId);
+        setMessages(msgs);
+      } else if (userId) {
+        // Individual chat
         const profile = await profileService.getProfile(userId);
         setOtherUser(profile);
         const msgs = await messageService.getMessages(userId);
@@ -101,10 +107,11 @@ export const ChatScreen: React.FC = () => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !userId) return;
+    if (!newMessage.trim()) return;
+    if (!userId && !teamId) return;
 
     try {
-      const message = await messageService.sendMessage(userId, newMessage.trim(), teamId);
+      const message = await messageService.sendMessage(userId || '', newMessage.trim(), teamId);
       setMessages(prev => [...prev, message]);
       setNewMessage('');
       flatListRef.current?.scrollToEnd();
