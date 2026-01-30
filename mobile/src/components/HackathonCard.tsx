@@ -120,7 +120,10 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
   };
 
   const getPlatformColor = (platform: string) => {
-    return platform === 'unstop' ? theme.colors.unstop : theme.colors.devpost;
+    if (platform === 'unstop') return theme.colors.unstop;
+    if (platform === 'devpost') return theme.colors.devpost;
+    if (platform === 'devfolio') return theme.colors.devfolio;
+    return theme.colors.primary;
   };
 
   return (

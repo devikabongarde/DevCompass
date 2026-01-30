@@ -30,6 +30,7 @@ export const colors = {
   // Platform colors
   unstop: '#ff6b35',       // Orange for Unstop
   devpost: '#003e54',      // Dark blue for Devpost
+  devfolio: '#6366f1',     // Indigo for Devfolio
   
   // UI colors
   border: '#e2e8f0',       // Slate-200
