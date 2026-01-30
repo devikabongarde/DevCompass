@@ -126,6 +126,15 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
     return theme.colors.primary;
   };
 
+  const getPlaceholderBgColor = (platform: string) => {
+    const platformColor = getPlatformColor(platform);
+    // Add transparency to platform color for background
+    if (platform === 'unstop') return 'rgba(255, 107, 53, 0.15)';  // Orange with opacity
+    if (platform === 'devpost') return 'rgba(0, 62, 84, 0.15)';    // Dark blue with opacity
+    if (platform === 'devfolio') return 'rgba(99, 102, 241, 0.15)'; // Indigo with opacity
+    return isDarkMode ? '#334155' : theme.colors.backgroundSecondary;
+  };
+
   return (
     <TouchableOpacity style={[styles.container, { backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface }]} onPress={handleDoubleTap} activeOpacity={0.95}>
       {/* Banner Image */}
@@ -133,8 +142,8 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
         {hackathon.banner_url ? (
           <Image source={{ uri: hackathon.banner_url }} style={styles.image} />
         ) : (
-          <View style={[styles.image, styles.placeholderImage, { backgroundColor: isDarkMode ? '#334155' : theme.colors.backgroundSecondary }]}>
-            <Ionicons name="code-slash" size={48} color={isDarkMode ? '#64748b' : theme.colors.textLight} />
+          <View style={[styles.image, styles.placeholderImage, { backgroundColor: getPlaceholderBgColor(hackathon.platform_source) }]}>
+            <Ionicons name="code-slash" size={48} color={getPlatformColor(hackathon.platform_source)} />
           </View>
         )}
         

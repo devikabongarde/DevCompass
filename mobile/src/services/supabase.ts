@@ -25,9 +25,16 @@ export const hackathonService = {
     
     if (error) throw error;
     
-    const unstopHackathons = (data || []).filter(h => h.platform_source === 'unstop');
-    const devpostHackathons = (data || []).filter(h => h.platform_source === 'devpost');
-    const devfolioHackathons = (data || []).filter(h => h.platform_source === 'devfolio');
+    // Filter out expired hackathons
+    const now = new Date();
+    const activeHackathons = (data || []).filter(h => {
+      if (!h.end_date) return true; // Include if no end_date
+      return new Date(h.end_date) > now;
+    });
+    
+    const unstopHackathons = activeHackathons.filter(h => h.platform_source === 'unstop');
+    const devpostHackathons = activeHackathons.filter(h => h.platform_source === 'devpost');
+    const devfolioHackathons = activeHackathons.filter(h => h.platform_source === 'devfolio');
     
     const shuffledUnstop = unstopHackathons.sort(() => Math.random() - 0.5);
     const shuffledDevpost = devpostHackathons.sort(() => Math.random() - 0.5);
