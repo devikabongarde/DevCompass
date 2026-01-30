@@ -25,27 +25,41 @@ export const hackathonService = {
     
     if (error) throw error;
     
-    const unstopHackathons = (data || []).filter(h => h.platform_source === 'unstop');
-    const devpostHackathons = (data || []).filter(h => h.platform_source === 'devpost');
+    // Filter out expired hackathons
+    const now = new Date();
+    const activeHackathons = (data || []).filter(h => {
+      if (!h.end_date) return true; // Include if no end_date
+      return new Date(h.end_date) > now;
+    });
+    
+    const unstopHackathons = activeHackathons.filter(h => h.platform_source === 'unstop');
+    const devpostHackathons = activeHackathons.filter(h => h.platform_source === 'devpost');
+    const devfolioHackathons = activeHackathons.filter(h => h.platform_source === 'devfolio');
     
     const shuffledUnstop = unstopHackathons.sort(() => Math.random() - 0.5);
     const shuffledDevpost = devpostHackathons.sort(() => Math.random() - 0.5);
+    const shuffledDevfolio = devfolioHackathons.sort(() => Math.random() - 0.5);
     
     const mixedHackathons = [];
     let unstopIndex = 0;
     let devpostIndex = 0;
+    let devfolioIndex = 0;
     
-    while (unstopIndex < shuffledUnstop.length || devpostIndex < shuffledDevpost.length) {
-      const choice = Math.random() < 0.5 ? 0 : 1;
+    while (unstopIndex < shuffledUnstop.length || devpostIndex < shuffledDevpost.length || devfolioIndex < shuffledDevfolio.length) {
+      const choice = Math.floor(Math.random() * 3);
       
       if (choice === 0 && unstopIndex < shuffledUnstop.length) {
         mixedHackathons.push(shuffledUnstop[unstopIndex++]);
       } else if (choice === 1 && devpostIndex < shuffledDevpost.length) {
         mixedHackathons.push(shuffledDevpost[devpostIndex++]);
+      } else if (choice === 2 && devfolioIndex < shuffledDevfolio.length) {
+        mixedHackathons.push(shuffledDevfolio[devfolioIndex++]);
       } else if (unstopIndex < shuffledUnstop.length) {
         mixedHackathons.push(shuffledUnstop[unstopIndex++]);
       } else if (devpostIndex < shuffledDevpost.length) {
         mixedHackathons.push(shuffledDevpost[devpostIndex++]);
+      } else if (devfolioIndex < shuffledDevfolio.length) {
+        mixedHackathons.push(shuffledDevfolio[devfolioIndex++]);
       }
     }
     

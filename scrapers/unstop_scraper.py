@@ -84,7 +84,7 @@ class UnstopScraper:
                 'title': item.get('title', ''),
                 'description': item.get('description', ''),
                 'short_summary': self.generate_short_summary(item.get('description', ''), item.get('title', '')),
-                'banner_url': item.get('banner_image'),
+                'banner_url': item.get('banner_image') or 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800',
                 'prize_money': prize_money,
                 'start_date': start_date,
                 'end_date': end_date,
