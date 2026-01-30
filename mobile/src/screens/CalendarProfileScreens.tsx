@@ -390,25 +390,6 @@ export const ProfileScreen: React.FC = () => {
             <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 12,
-            }}
-            onPress={() => navigation.navigate('ConversationsScreen' as never)}
-          >
-            <Ionicons name="chatbubble-outline" size={20} color={theme.colors.primary} />
-            <Text style={{
-              fontSize: 16,
-              color: isDarkMode ? '#f8fafc' : '#0F172A',
-              marginLeft: 12,
-              flex: 1,
-            }}>
-              Messages
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
-          </TouchableOpacity>
         </View>
         <View style={[styles.menuContainer, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
           <TouchableOpacity 

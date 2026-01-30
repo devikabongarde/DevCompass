@@ -756,6 +756,19 @@ export const messageService = {
     if (error) throw error;
   },
 
+  async deleteMessage(messageId: string): Promise<void> {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) throw new Error('User not authenticated');
+    
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId)
+      .eq('from_user_id', userId);
+    
+    if (error) throw error;
+  },
+
   async getConversations(): Promise<any[]> {
     const currentUserId = (await supabase.auth.getUser()).data.user?.id;
     if (!currentUserId) return [];

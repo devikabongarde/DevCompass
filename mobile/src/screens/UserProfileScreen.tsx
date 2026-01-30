@@ -79,9 +79,7 @@ export const UserProfileScreen: React.FC = () => {
     }
   };
 
-  const handleMessage = () => {
-    navigation.navigate('ChatScreen' as never, { userId } as never);
-  };
+
 
   const openLink = (url: string) => {
     Linking.openURL(url).catch(() => {
@@ -292,24 +290,6 @@ export const UserProfileScreen: React.FC = () => {
                   fontWeight: '600',
                 }}>
                   {isFollowing ? 'Following' : 'Follow'}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: isDarkMode ? '#334155' : '#F1F5F9',
-                  paddingVertical: 12,
-                  borderRadius: 8,
-                  alignItems: 'center',
-                }}
-                onPress={handleMessage}
-              >
-                <Text style={{
-                  color: isDarkMode ? '#f8fafc' : '#475569',
-                  fontWeight: '600',
-                }}>
-                  Message
                 </Text>
               </TouchableOpacity>
             </View>

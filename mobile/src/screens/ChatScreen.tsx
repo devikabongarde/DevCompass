@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Platform,
   Linking,
   Alert,
+  ActionSheetIOS,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,6 +31,55 @@ export const ChatScreen: React.FC = () => {
   const [otherUser, setOtherUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList>(null);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
+
+  const showMenu = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'View Profile'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            // View Profile
+            if (userId) {
+              navigation.navigate('UserProfile' as never, { userId } as never);
+            }
+          }
+        }
+      );
+    } else {
+      // Android fallback
+      Alert.alert(
+        'Options',
+        '',
+        [
+          {
+            text: 'View Profile',
+            onPress: () => {
+              if (userId) {
+                navigation.navigate('UserProfile' as never, { userId } as never);
+              }
+            }
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          }
+        ]
+      );
+    }
+  };
+
+  const confirmDeleteChat = () => {
+    // Placeholder - delete functionality removed
+  };
 
   useEffect(() => {
     loadData();
@@ -61,6 +111,29 @@ export const ChatScreen: React.FC = () => {
     } catch (error) {
       console.error('Error sending message:', error);
     }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    Alert.alert(
+      'Delete Message',
+      'Are you sure you want to delete this message?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await messageService.deleteMessage(messageId);
+              setMessages(prev => prev.filter(msg => msg.id !== messageId));
+            } catch (error) {
+              console.error('Error deleting message:', error);
+              Alert.alert('Error', 'Failed to delete message');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
@@ -148,12 +221,19 @@ export const ChatScreen: React.FC = () => {
     };
     
     return (
-      <View style={{
-        flexDirection: 'row',
-        justifyContent: isMe ? 'flex-end' : 'flex-start',
-        marginBottom: 12,
-        paddingHorizontal: 16,
-      }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: isMe ? 'flex-end' : 'flex-start',
+          marginBottom: 12,
+          paddingHorizontal: 16,
+        }}
+        onLongPress={() => {
+          if (isMe) {
+            handleDeleteMessage(item.id);
+          }
+        }}
+      >
         <TouchableOpacity
           style={{
             maxWidth: '80%',
@@ -169,8 +249,12 @@ export const ChatScreen: React.FC = () => {
             borderWidth: isHackathonShare ? 1 : 0,
             borderColor: isHackathonShare ? (isDarkMode ? '#3b82f6' : '#1d4ed8') : 'transparent',
           }}
-          onPress={isHackathonShare ? handleHackathonPress : undefined}
-          disabled={!isHackathonShare}
+          activeOpacity={0.7}
+          onPress={() => {
+            if (isHackathonShare) {
+              handleHackathonPress();
+            }
+          }}
         >
           {isHackathonShare && (
             <View style={{
@@ -267,6 +351,10 @@ export const ChatScreen: React.FC = () => {
             @{otherUser?.username}
           </Text>
         </View>
+
+        <TouchableOpacity onPress={showMenu} style={{ padding: 8 }}>
+          <Ionicons name="ellipsis-vertical" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
+        </TouchableOpacity>
       </View>
 
       {/* Messages */}
@@ -274,7 +362,7 @@ export const ChatScreen: React.FC = () => {
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || `message-${index}-${item.created_at}`}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingVertical: 16 }}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd()}

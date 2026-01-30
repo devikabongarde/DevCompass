@@ -155,6 +155,9 @@ CREATE POLICY "Users can send messages" ON messages
 CREATE POLICY "Users can update their own messages" ON messages
   FOR UPDATE USING (auth.uid() = from_user_id);
 
+CREATE POLICY "Users can delete their own messages" ON messages
+  FOR DELETE USING (auth.uid() = from_user_id);
+
 -- Functions for better UX
 
 -- Function to automatically add team leader to members array
