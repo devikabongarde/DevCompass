@@ -82,6 +82,7 @@ export interface Team {
   is_open: boolean;
   hackathon?: Hackathon;
   leader_profile?: Profile;
+  member_profiles?: Profile[];
   created_at: string;
   updated_at: string;
 }

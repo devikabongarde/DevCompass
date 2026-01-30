@@ -180,6 +180,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to allow members to leave a team (non-leader only)
+CREATE OR REPLACE FUNCTION leave_team(team_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE teams
+  SET members = array_remove(members, auth.uid())
+  WHERE id = team_id
+    AND auth.uid() = ANY(members)
+    AND auth.uid() <> leader_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION leave_team(UUID) TO authenticated;
+
 CREATE TRIGGER trigger_team_seekers_updated_at
   BEFORE UPDATE ON team_seekers
   FOR EACH ROW

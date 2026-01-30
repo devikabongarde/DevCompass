@@ -582,6 +582,16 @@ export const teammatesService = {
     
     if (error) throw error;
   },
+
+  async leaveTeam(teamId: string): Promise<void> {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+      .rpc('leave_team', { team_id: teamId });
+
+    if (error) throw error;
+  },
 };
 
 export const followService = {

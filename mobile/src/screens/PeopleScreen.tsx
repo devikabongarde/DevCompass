@@ -12,14 +12,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useThemeStore, useAuthStore } from '../stores';
 import { teammatesService, profileService, messageService } from '../services/supabase';
 import { theme } from '../theme';
 import { TeamInvite, Team, Profile, Message } from '../types';
 
 export const PeopleScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { isDarkMode = false } = useThemeStore();
   const { user } = useAuthStore();
   
@@ -75,6 +75,14 @@ export const PeopleScreen: React.FC = () => {
       loadData();
     }
   }, [activeTab, searchQuery]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (activeTab !== 'search') {
+        loadData();
+      }
+    }, [activeTab])
+  );
 
   const handleInviteResponse = async (inviteId: string, status: 'accepted' | 'rejected') => {
     try {

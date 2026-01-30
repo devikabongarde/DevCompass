@@ -14,10 +14,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useThemeStore, useAuthStore } from '../stores';
 import { teammatesService, authService } from '../services/supabase';
 import { theme } from '../theme';
-import { Team } from '../types';
+import { Team, Profile } from '../types';
 
 export const TeamDetailScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute();
   const { team: initialTeam } = route.params as { team: Team };
   const { isDarkMode = false } = useThemeStore();
@@ -26,6 +26,7 @@ export const TeamDetailScreen: React.FC = () => {
   const [team, setTeam] = useState<Team>(initialTeam);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [newTeamName, setNewTeamName] = useState(team.name);
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(user?.id ?? null);
@@ -54,6 +55,7 @@ export const TeamDetailScreen: React.FC = () => {
   }, [user?.id]);
 
   const isLeader = currentUserId === team.leader_id;
+  const isMember = !!currentUserId && team.members.includes(currentUserId);
 
   const handleUpdateTeamName = async () => {
     if (!newTeamName.trim()) {
@@ -85,6 +87,21 @@ export const TeamDetailScreen: React.FC = () => {
     } catch (error) {
       console.error('Error deleting team:', error);
       Alert.alert('Error', 'Failed to delete team');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLeaveTeam = async () => {
+    setLoading(true);
+    try {
+      await teammatesService.leaveTeam(team.id);
+      setShowLeaveModal(false);
+      Alert.alert('Left Team', 'You have left the team.');
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error leaving team:', error);
+      Alert.alert('Error', 'Failed to leave team');
     } finally {
       setLoading(false);
     }
@@ -209,6 +226,22 @@ export const TeamDetailScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
           )}
+
+          {!isLeader && isMember && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#EF4444',
+                paddingVertical: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}
+              onPress={() => setShowLeaveModal(true)}
+            >
+              <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+                Leave Team
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Hackathon Info */}
@@ -258,14 +291,14 @@ export const TeamDetailScreen: React.FC = () => {
             Team Members
           </Text>
           
-          {team.member_profiles?.map((member, index) => (
+              {team.member_profiles?.map((member: Profile, index: number) => (
             <TouchableOpacity
               key={member.id}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 paddingVertical: 12,
-                borderBottomWidth: index < team.member_profiles.length - 1 ? 1 : 0,
+                    borderBottomWidth: index < (team.member_profiles?.length ?? 0) - 1 ? 1 : 0,
                 borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
               }}
               onPress={() => navigation.navigate('UserProfile' as never, { userId: member.id } as never)}
@@ -491,6 +524,84 @@ export const TeamDetailScreen: React.FC = () => {
                   fontWeight: '600',
                 }}>
                   {loading ? 'Deleting...' : 'Delete'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Leave Team Confirmation Modal */}
+      <Modal visible={showLeaveModal} animationType="fade" transparent>
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        }}>
+          <View style={{
+            backgroundColor: isDarkMode ? '#1e293b' : 'white',
+            borderRadius: 12,
+            padding: 20,
+            width: '100%',
+            maxWidth: 400,
+          }}>
+            <Text style={{
+              fontSize: 18,
+              fontWeight: 'bold',
+              color: isDarkMode ? '#f8fafc' : '#0F172A',
+              marginBottom: 12,
+            }}>
+              Leave Team?
+            </Text>
+            
+            <Text style={{
+              fontSize: 16,
+              color: isDarkMode ? '#94a3b8' : '#64748B',
+              marginBottom: 20,
+              lineHeight: 22,
+            }}>
+              Are you sure you want to leave this team?
+            </Text>
+            
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: isDarkMode ? '#475569' : '#E5E7EB',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                onPress={() => setShowLeaveModal(false)}
+                disabled={loading}
+              >
+                <Text style={{
+                  color: isDarkMode ? '#f8fafc' : '#64748B',
+                  fontWeight: '600',
+                }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: '#EF4444',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  opacity: loading ? 0.7 : 1,
+                }}
+                onPress={handleLeaveTeam}
+                disabled={loading}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontWeight: '600',
+                }}>
+                  {loading ? 'Leaving...' : 'Leave'}
                 </Text>
               </TouchableOpacity>
             </View>
