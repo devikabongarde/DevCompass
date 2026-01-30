@@ -8,17 +8,45 @@ import {
   Switch,
   Alert,
   Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSavedStore, useThemeStore } from '../stores';
 import { theme } from '../theme';
 
+// --- Shared Components ---
+const Header = ({ title }: { title: string }) => {
+  const navigation = useNavigation();
+  return (
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color="#F5A623" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>{title}</Text>
+      <View style={{ width: 40 }} />
+    </View>
+  );
+};
+
+const PremiumSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <View style={styles.sectionContainer}>
+    <View style={styles.sectionHeader}>
+      <View style={styles.goldBar} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+    <View style={styles.sectionContent}>
+      {children}
+    </View>
+  </View>
+);
+
+// --- Saved Hackathons Screen ---
 export const SavedHackathonsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { savedHackathons, unsaveHackathon } = useSavedStore();
-  const { isDarkMode = false } = useThemeStore();
 
   const handleHackathonPress = (hackathon: any) => {
     navigation.navigate('HackathonDetail' as never, { hackathon } as never);
@@ -32,133 +60,70 @@ export const SavedHackathonsScreen: React.FC = () => {
     }
   };
 
-  const containerStyle = {
-    flex: 1,
-    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
-  };
-
-  const headerStyle = {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
-  };
-
-  const headerTitleStyle = {
-    fontSize: 18,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-  };
-
-  const hackathonCardStyle = {
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  };
-
-  const hackathonTitleStyle = {
-    fontSize: 18,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    flex: 1,
-    marginRight: 12,
-  };
-
-  const descriptionStyle = {
-    fontSize: 14,
-    color: isDarkMode ? '#94a3b8' : '#64748B',
-    lineHeight: 20,
-  };
-
-  const emptyTitleStyle = {
-    fontSize: 20,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    marginTop: 16,
-    marginBottom: 8,
-  };
-
-  const emptyTextStyle = {
-    fontSize: 14,
-    color: isDarkMode ? '#94a3b8' : '#64748B',
-    textAlign: 'center' as const,
-    paddingHorizontal: 32,
-  };
-
   return (
-    <SafeAreaView style={containerStyle}>
-      <View style={headerStyle}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
-        </TouchableOpacity>
-        <Text style={headerTitleStyle}>Saved Hackathons</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <ScrollView style={styles.content}>
+    <View style={styles.container}>
+      <Header title="Saved Hackathons" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {savedHackathons.length > 0 ? (
           savedHackathons.map((hackathon) => (
             <TouchableOpacity
               key={hackathon.id}
-              style={hackathonCardStyle}
+              style={styles.hackathonCard}
               onPress={() => handleHackathonPress(hackathon)}
             >
-              <View style={styles.cardHeader}>
-                <Text style={hackathonTitleStyle} numberOfLines={2}>
-                  {hackathon.title}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => handleUnsave(hackathon.id)}
-                  style={styles.unsaveButton}
-                >
-                  <Ionicons name="heart" size={20} color="#EF4444" />
+              {/* Blurred Background for Card */}
+              {hackathon.banner_url && (
+                <View style={StyleSheet.absoluteFillObject}>
+                  <View style={{ backgroundColor: '#000', opacity: 0.7 }} />
+                </View>
+              )}
+
+              <View style={styles.hackathonCardHeader}>
+                <View style={[styles.platformBadge, {
+                  backgroundColor: hackathon.platform_source === 'unstop' ? '#FF6B35' :
+                    hackathon.platform_source === 'devpost' ? '#003E54' : '#F5A623',
+                  borderColor: 'rgba(255,255,255,0.2)',
+                  borderWidth: 1
+                }]}>
+                  <Text style={styles.platformText}>{hackathon.platform_source.toUpperCase()}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleUnsave(hackathon.id)} style={styles.iconButton}>
+                  <Ionicons name="bookmark" size={22} color="#F5A623" />
                 </TouchableOpacity>
               </View>
-              
-              <View style={styles.cardContent}>
-                <View style={[
-                  styles.platformBadge,
-                  { backgroundColor: hackathon.platform_source === 'unstop' ? '#FF6B35' : '#003E54' }
-                ]}>
-                  <Text style={styles.platformText}>
-                    {hackathon.platform_source.toUpperCase()}
-                  </Text>
-                </View>
-                
+
+              <Text style={styles.hackathonTitle} numberOfLines={2}>{hackathon.title}</Text>
+
+              <View style={styles.hackathonFooter}>
                 {hackathon.prize_money && (
-                  <Text style={styles.prizeText}>
-                    💰 {hackathon.prize_money.replace(/<[^>]*>/g, '').replace(/&gt;/g, '>')}
-                  </Text>
+                  <View style={styles.metaItem}>
+                    <Ionicons name="trophy" size={14} color="#FFD700" />
+                    <Text style={styles.metaText}>{hackathon.prize_money.replace(/<[^>]*>/g, '')}</Text>
+                  </View>
                 )}
-                
-                <Text style={descriptionStyle} numberOfLines={3}>
-                  {hackathon.short_summary || hackathon.description}
-                </Text>
+                <View style={styles.metaItem}>
+                  <Ionicons name="arrow-forward-circle" size={18} color="#F5A623" />
+                  <Text style={[styles.metaText, { color: '#F5A623' }]}>View Details</Text>
+                </View>
               </View>
             </TouchableOpacity>
           ))
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="heart-outline" size={64} color={isDarkMode ? '#64748b' : '#94A3B8'} />
-            <Text style={emptyTitleStyle}>No Saved Hackathons</Text>
-            <Text style={emptyTextStyle}>
-              Swipe left on hackathons in the feed to save them here
-            </Text>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="bookmark-outline" size={64} color="#F5A623" />
+            </View>
+            <Text style={styles.emptyTitle}>No Saved Data</Text>
+            <Text style={styles.emptyText}>Swipe right on cards to save them here.</Text>
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
+// --- Notifications Screen ---
 export const NotificationsScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const { isDarkMode = false } = useThemeStore();
   const [notifications, setNotifications] = useState({
     deadlineReminders: true,
     newHackathons: true,
@@ -167,143 +132,65 @@ export const NotificationsScreen: React.FC = () => {
   });
 
   const toggleNotification = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const containerStyle = {
-    flex: 1,
-    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
-  };
-
-  const headerStyle = {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
-  };
-
-  const headerTitleStyle = {
-    fontSize: 18,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-  };
-
-  const sectionStyle = {
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden' as const,
-  };
-
-  const sectionTitleStyle = {
-    fontSize: 16,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    padding: 16,
-    paddingBottom: 8,
-  };
-
-  const settingTitleStyle = {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    marginBottom: 4,
-  };
-
-  const settingDescriptionStyle = {
-    fontSize: 14,
-    color: isDarkMode ? '#94a3b8' : '#64748B',
-  };
+  const NotificationToggle = ({ label, desc, value, onToggle }: any) => (
+    <View style={styles.settingRow}>
+      <View style={styles.settingTextContainer}>
+        <Text style={styles.settingLabel}>{label}</Text>
+        <Text style={styles.settingDesc}>{desc}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: '#333', true: 'rgba(245, 166, 35, 0.5)' }}
+        thumbColor={value ? '#F5A623' : '#666'}
+      />
+    </View>
+  );
 
   return (
-    <SafeAreaView style={containerStyle}>
-      <View style={headerStyle}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
-        </TouchableOpacity>
-        <Text style={headerTitleStyle}>Notifications</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <View style={styles.container}>
+      <Header title="Notifications" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <PremiumSection title="Alerts">
+          <NotificationToggle
+            label="Deadline Reminders"
+            desc="24h before registration closes"
+            value={notifications.deadlineReminders}
+            onToggle={() => toggleNotification('deadlineReminders')}
+          />
+          <NotificationToggle
+            label="New Hackathons"
+            desc="Immediate alerts for new drops"
+            value={notifications.newHackathons}
+            onToggle={() => toggleNotification('newHackathons')}
+          />
+          <NotificationToggle
+            label="Prize Updates"
+            desc="Notify when prize pool increases"
+            value={notifications.prizeUpdates}
+            onToggle={() => toggleNotification('prizeUpdates')}
+          />
+        </PremiumSection>
 
-      <ScrollView style={styles.content}>
-        <View style={sectionStyle}>
-          <Text style={sectionTitleStyle}>Hackathon Alerts</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>Deadline Reminders</Text>
-              <Text style={settingDescriptionStyle}>
-                Get notified 24 hours before registration deadlines
-              </Text>
-            </View>
-            <Switch
-              value={notifications.deadlineReminders}
-              onValueChange={() => toggleNotification('deadlineReminders')}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>New Hackathons</Text>
-              <Text style={settingDescriptionStyle}>
-                Be the first to know about new hackathons
-              </Text>
-            </View>
-            <Switch
-              value={notifications.newHackathons}
-              onValueChange={() => toggleNotification('newHackathons')}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>Prize Updates</Text>
-              <Text style={settingDescriptionStyle}>
-                Get notified when prize amounts change
-              </Text>
-            </View>
-            <Switch
-              value={notifications.prizeUpdates}
-              onValueChange={() => toggleNotification('prizeUpdates')}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-        </View>
-
-        <View style={sectionStyle}>
-          <Text style={sectionTitleStyle}>Digest</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>Weekly Digest</Text>
-              <Text style={settingDescriptionStyle}>
-                Weekly summary of trending hackathons
-              </Text>
-            </View>
-            <Switch
-              value={notifications.weeklyDigest}
-              onValueChange={() => toggleNotification('weeklyDigest')}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-        </View>
+        <PremiumSection title="Digest">
+          <NotificationToggle
+            label="Weekly Report"
+            desc="Summary of top hackathons"
+            value={notifications.weeklyDigest}
+            onToggle={() => toggleNotification('weeklyDigest')}
+          />
+        </PremiumSection>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
+// --- Settings Screen ---
 export const SettingsScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const { isDarkMode = false, toggleDarkMode } = useThemeStore();
+  const { isDarkMode, toggleDarkMode } = useThemeStore();
   const [settings, setSettings] = useState({
     autoRefresh: true,
     showPlatformBadges: true,
@@ -311,487 +198,338 @@ export const SettingsScreen: React.FC = () => {
   });
 
   const toggleSetting = (key: keyof typeof settings) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const containerStyle = {
-    flex: 1,
-    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
-  };
-
-  const headerStyle = {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
-  };
-
-  const headerTitleStyle = {
-    fontSize: 18,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-  };
-
-  const sectionStyle = {
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden' as const,
-  };
-
-  const sectionTitleStyle = {
-    fontSize: 16,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    padding: 16,
-    paddingBottom: 8,
-  };
-
-  const settingTitleStyle = {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    marginBottom: 4,
-  };
-
-  const settingDescriptionStyle = {
-    fontSize: 14,
-    color: isDarkMode ? '#94a3b8' : '#64748B',
-  };
+  const SettingRow = ({ label, desc, value, onToggle, isSwitch = true }: any) => (
+    <TouchableOpacity style={styles.settingRow} onPress={isSwitch ? onToggle : undefined} activeOpacity={isSwitch ? 1 : 0.7}>
+      <View style={styles.settingTextContainer}>
+        <Text style={styles.settingLabel}>{label}</Text>
+        {desc && <Text style={styles.settingDesc}>{desc}</Text>}
+      </View>
+      {isSwitch ? (
+        <Switch
+          value={value}
+          onValueChange={onToggle}
+          trackColor={{ false: '#333', true: 'rgba(245, 166, 35, 0.5)' }}
+          thumbColor={value ? '#F5A623' : '#666'}
+        />
+      ) : (
+        <Ionicons name="chevron-forward" size={20} color="#666" />
+      )}
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={containerStyle}>
-      <View style={headerStyle}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
+    <View style={styles.container}>
+      <Header title="Settings" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <PremiumSection title="Appearance">
+          <SettingRow
+            label="Dark Mode"
+            desc="Always on for premium feel"
+            value={true} // Forced True for this UI
+            onToggle={() => { }} // Disabled
+            isSwitch={true}
+          />
+          <SettingRow
+            label="Show Badges"
+            desc="Display platform icons on cards"
+            value={settings.showPlatformBadges}
+            onToggle={() => toggleSetting('showPlatformBadges')}
+          />
+        </PremiumSection>
+
+        <PremiumSection title="Legal">
+          <SettingRow label="Privacy Policy" onToggle={() => { }} isSwitch={false} />
+          <SettingRow label="Terms of Service" onToggle={() => { }} isSwitch={false} />
+          <SettingRow label="App Version" desc="v1.2.0 (Premium Build)" onToggle={() => { }} isSwitch={false} />
+        </PremiumSection>
+
+        <TouchableOpacity style={styles.dangerButton}>
+          <Text style={styles.dangerButtonText}>Delete Account</Text>
         </TouchableOpacity>
-        <Text style={headerTitleStyle}>Settings</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <ScrollView style={styles.content}>
-        <View style={sectionStyle}>
-          <Text style={sectionTitleStyle}>Appearance</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>Dark Mode</Text>
-              <Text style={settingDescriptionStyle}>
-                Switch to dark theme for better night viewing
-              </Text>
-            </View>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleDarkMode}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>Show Platform Badges</Text>
-              <Text style={settingDescriptionStyle}>
-                Display Unstop/Devpost badges on cards
-              </Text>
-            </View>
-            <Switch
-              value={settings.showPlatformBadges}
-              onValueChange={() => toggleSetting('showPlatformBadges')}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>Compact View</Text>
-              <Text style={settingDescriptionStyle}>
-                Show more hackathons in less space
-              </Text>
-            </View>
-            <Switch
-              value={settings.compactView}
-              onValueChange={() => toggleSetting('compactView')}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-        </View>
-
-        <View style={sectionStyle}>
-          <Text style={sectionTitleStyle}>Data & Sync</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={settingTitleStyle}>Auto Refresh</Text>
-              <Text style={settingDescriptionStyle}>
-                Automatically refresh hackathons when app opens
-              </Text>
-            </View>
-            <Switch
-              value={settings.autoRefresh}
-              onValueChange={() => toggleSetting('autoRefresh')}
-              trackColor={{ false: '#E5E7EB', true: theme.colors.primary }}
-            />
-          </View>
-        </View>
-
-        <View style={sectionStyle}>
-          <Text style={sectionTitleStyle}>About</Text>
-          
-          <TouchableOpacity style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
-            <Text style={[styles.menuItemText, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Version</Text>
-            <Text style={[styles.menuItemValue, { color: isDarkMode ? '#94a3b8' : '#64748B' }]}>1.0.0</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
-            <Text style={[styles.menuItemText, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Privacy Policy</Text>
-            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
-            <Text style={[styles.menuItemText, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Terms of Service</Text>
-            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
-          </TouchableOpacity>
-        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
+// --- Help & Support Screen ---
 export const HelpSupportScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const { isDarkMode = false } = useThemeStore();
-
-  const handleContactSupport = () => {
-    Linking.openURL('mailto:support@devcompass.app?subject=DevCompass Support');
+  const handleContact = (type: string) => {
+    // Mock action
+    Alert.alert('Opening Support', ` contacting ${type}...`);
   };
 
-  const handleReportBug = () => {
-    Linking.openURL('mailto:bugs@devcompass.app?subject=Bug Report');
-  };
-
-  const handleFeatureRequest = () => {
-    Linking.openURL('mailto:features@devcompass.app?subject=Feature Request');
-  };
-
-  const containerStyle = {
-    flex: 1,
-    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
-  };
-
-  const headerStyle = {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
-  };
-
-  const headerTitleStyle = {
-    fontSize: 18,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-  };
-
-  const sectionStyle = {
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden' as const,
-  };
-
-  const sectionTitleStyle = {
-    fontSize: 16,
-    fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    padding: 16,
-    paddingBottom: 8,
-  };
-
-  const helpTitleStyle = {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    marginBottom: 4,
-  };
-
-  const helpDescriptionStyle = {
-    fontSize: 14,
-    color: isDarkMode ? '#94a3b8' : '#64748B',
-  };
-
-  const faqQuestionStyle = {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
-    marginBottom: 8,
-  };
-
-  const faqAnswerStyle = {
-    fontSize: 14,
-    color: isDarkMode ? '#94a3b8' : '#64748B',
-    lineHeight: 20,
-  };
+  const SupportItem = ({ icon, title, desc }: any) => (
+    <TouchableOpacity style={styles.supportItem} onPress={() => handleContact(title)}>
+      <View style={styles.supportIconContainer}>
+        <Ionicons name={icon} size={24} color="#F5A623" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.supportTitle}>{title}</Text>
+        <Text style={styles.supportDesc}>{desc}</Text>
+      </View>
+      <Ionicons name="open-outline" size={20} color="#666" />
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={containerStyle}>
-      <View style={headerStyle}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#f8fafc' : '#0F172A'} />
-        </TouchableOpacity>
-        <Text style={headerTitleStyle}>Help & Support</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <View style={styles.container}>
+      <Header title="Help & Support" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <PremiumSection title="Contact Us">
+          <SupportItem icon="mail" title="Email Support" desc="Get help within 24h" />
+          <SupportItem icon="bug" title="Report Bug" desc="Found an issue? Let us know" />
+          <SupportItem icon="bulb" title="Feature Request" desc="Request new features" />
+        </PremiumSection>
 
-      <ScrollView style={styles.content}>
-        <View style={sectionStyle}>
-          <Text style={sectionTitleStyle}>Get Help</Text>
-          
-          <TouchableOpacity style={styles.helpItem} onPress={handleContactSupport}>
-            <Ionicons name="mail" size={24} color={theme.colors.primary} />
-            <View style={styles.helpInfo}>
-              <Text style={helpTitleStyle}>Contact Support</Text>
-              <Text style={helpDescriptionStyle}>
-                Get help with your account or technical issues
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.helpItem} onPress={handleReportBug}>
-            <Ionicons name="bug" size={24} color={theme.colors.primary} />
-            <View style={styles.helpInfo}>
-              <Text style={helpTitleStyle}>Report a Bug</Text>
-              <Text style={helpDescriptionStyle}>
-                Found something that's not working? Let us know
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.helpItem} onPress={handleFeatureRequest}>
-            <Ionicons name="bulb" size={24} color={theme.colors.primary} />
-            <View style={styles.helpInfo}>
-              <Text style={helpTitleStyle}>Request a Feature</Text>
-              <Text style={helpDescriptionStyle}>
-                Have an idea to make DevCompass better?
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={sectionStyle}>
-          <Text style={sectionTitleStyle}>FAQ</Text>
-          
+        <PremiumSection title="FAQ">
           <View style={styles.faqItem}>
-            <Text style={faqQuestionStyle}>How do I save hackathons?</Text>
-            <Text style={faqAnswerStyle}>
-              Swipe left on any hackathon card in the feed to save it to your calendar and saved list.
-            </Text>
+            <Text style={styles.faqQuestion}>How do I apply?</Text>
+            <Text style={styles.faqAnswer}>Click the 'Apply' button on any hackathon card to visit the official registration page.</Text>
           </View>
-
           <View style={styles.faqItem}>
-            <Text style={faqQuestionStyle}>How often is data updated?</Text>
-            <Text style={faqAnswerStyle}>
-              We update hackathon data daily from Unstop and Devpost to ensure you have the latest information.
-            </Text>
+            <Text style={styles.faqQuestion}>Is it free?</Text>
+            <Text style={styles.faqAnswer}>The app is free to use. Most hackathons are free, but check specific rules.</Text>
           </View>
-
-          <View style={styles.faqItem}>
-            <Text style={faqQuestionStyle}>Can I participate in multiple hackathons?</Text>
-            <Text style={faqAnswerStyle}>
-              Yes! You can save and track multiple hackathons. Check each hackathon's rules for participation requirements.
-            </Text>
-          </View>
-        </View>
+        </PremiumSection>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0A0A0A', // Pure Black Background
   },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingTop: 60, // Safe area
+    paddingBottom: 20,
+    backgroundColor: '#0A0A0A',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#1A1A1A',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(245, 166, 35, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0F172A',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#F5A623',
+    letterSpacing: 0.5,
   },
-  content: {
+  // Section Wrapper
+  sectionContainer: {
+    marginTop: 24,
+    backgroundColor: '#111',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#222',
+    overflow: 'hidden',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderBottomWidth: 1,
+    borderBottomColor: '#222',
+  },
+  goldBar: {
+    width: 4,
+    height: 16,
+    backgroundColor: '#F5A623',
+    marginRight: 10,
+    borderRadius: 2,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#AAA',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  sectionContent: {
+    padding: 0,
+  },
+  // Settings Row
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  settingTextContainer: {
     flex: 1,
-    padding: 16,
+    paddingRight: 16,
   },
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+    marginBottom: 4,
+  },
+  settingDesc: {
+    fontSize: 13,
+    color: '#666',
+  },
+  // Saved Hackathon Card
   hackathonCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: '#151515',
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#222',
+    overflow: 'hidden',
     padding: 16,
-    marginBottom: 12,
   },
-  cardHeader: {
+  hackathonCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
+  },
+  platformBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  platformText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  iconButton: {
+    padding: 4,
   },
   hackathonTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0F172A',
-    flex: 1,
-    marginRight: 12,
+    color: '#FFF',
+    marginBottom: 12,
+    lineHeight: 24,
   },
-  unsaveButton: {
-    padding: 4,
+  hackathonFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
-  cardContent: {
-    gap: 8,
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  platformBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  metaText: {
+    fontSize: 13,
+    color: '#CCC',
+    fontWeight: '500',
   },
-  platformText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
+  // Support
+  supportItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+    gap: 16,
   },
-  prizeText: {
-    fontSize: 14,
+  supportIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245, 166, 35, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  supportTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#10B981',
+    color: '#FFF',
+    marginBottom: 2,
   },
-  description: {
+  supportDesc: {
+    fontSize: 13,
+    color: '#666',
+  },
+  // FAQ
+  faqItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  faqQuestion: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#F5A623',
+    marginBottom: 6,
+  },
+  faqAnswer: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#CCC',
     lineHeight: 20,
+  },
+  // Others
+  dangerButton: {
+    marginTop: 32,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  dangerButtonText: {
+    color: '#EF4444',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 80,
+    justifyContent: 'center',
+    paddingTop: 80,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(245, 166, 35, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 166, 35, 0.2)',
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#0F172A',
-    marginTop: 16,
+    color: '#FFF',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#666',
     textAlign: 'center',
-    paddingHorizontal: 32,
-  },
-  section: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#0F172A',
-    padding: 16,
-    paddingBottom: 8,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  settingInfo: {
-    flex: 1,
-    marginRight: 16,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#0F172A',
-    marginBottom: 4,
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: '#64748B',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: '#0F172A',
-  },
-  menuItemValue: {
-    fontSize: 16,
-    color: '#64748B',
-  },
-  helpItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  helpInfo: {
-    flex: 1,
-    marginLeft: 16,
-    marginRight: 12,
-  },
-  helpTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#0F172A',
-    marginBottom: 4,
-  },
-  helpDescription: {
-    fontSize: 14,
-    color: '#64748B',
-  },
-  faqItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  faqQuestion: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#0F172A',
-    marginBottom: 8,
-  },
-  faqAnswer: {
-    fontSize: 14,
-    color: '#64748B',
-    lineHeight: 20,
   },
 });

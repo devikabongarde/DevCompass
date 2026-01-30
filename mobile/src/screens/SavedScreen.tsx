@@ -30,28 +30,28 @@ export const SavedScreen: React.FC = () => {
 
   const renderHackathon = ({ item }: { item: Hackathon }) => (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface }]}
+      style={[styles.card, { backgroundColor: '#1A1A1A', borderColor: 'rgba(245, 166, 35, 0.2)', borderWidth: 1 }]}
       onPress={() => handleHackathonPress(item)}
     >
       <View style={styles.cardContent}>
-        <Text style={[styles.title, { color: isDarkMode ? '#f8fafc' : theme.colors.text }]} numberOfLines={2}>
+        <Text style={[styles.title, { color: '#FFFFFF' }]} numberOfLines={2}>
           {item.title}
         </Text>
-        <Text style={[styles.summary, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]} numberOfLines={2}>
+        <Text style={[styles.summary, { color: '#B8B8B8' }]} numberOfLines={2}>
           {item.short_summary || item.description}
         </Text>
-        
+
         <View style={styles.cardFooter}>
-          <View style={styles.platformBadge}>
-            <Text style={styles.platformText}>
+          <View style={[styles.platformBadge, { backgroundColor: '#F5A623', borderColor: '#FFD700', borderWidth: 1 }]}>
+            <Text style={[styles.platformText, { color: '#0A0A0A', fontWeight: '800' }]}>
               {item.platform_source.toUpperCase()}
             </Text>
           </View>
-          
+
           {item.registration_deadline && (
             <View style={styles.deadlineContainer}>
-              <Ionicons name="time-outline" size={14} color={theme.colors.error} />
-              <Text style={styles.deadlineText}>
+              <Ionicons name="time-outline" size={14} color="#EF4444" />
+              <Text style={[styles.deadlineText, { color: '#EF4444', fontWeight: '600' }]}>
                 {new Date(item.registration_deadline).toLocaleDateString()}
               </Text>
             </View>
@@ -63,26 +63,30 @@ export const SavedScreen: React.FC = () => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="bookmark-outline" size={64} color={isDarkMode ? '#64748b' : theme.colors.textLight} />
-      <Text style={[styles.emptyTitle, { color: isDarkMode ? '#f8fafc' : theme.colors.text }]}>No saved hackathons</Text>
-      <Text style={[styles.emptySubtitle, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>
+      <View style={styles.emptyIconContainer}>
+        <Ionicons name="bookmark-outline" size={64} color="#F5A623" />
+      </View>
+      <Text style={[styles.emptyTitle, { color: '#FFFFFF' }]}>No saved hackathons</Text>
+      <Text style={[styles.emptySubtitle, { color: '#B8B8B8' }]}>
         Save hackathons from the feed to see them here
       </Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0f172a' : theme.colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: isDarkMode ? '#334155' : theme.colors.border, backgroundColor: isDarkMode ? '#1e293b' : 'transparent' }]}>
-        <Text style={[styles.headerTitle, { color: isDarkMode ? '#f8fafc' : theme.colors.text }]}>Saved Hackathons</Text>
-        <Text style={[styles.headerSubtitle, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#0A0A0A' }]}>
+      <View style={[styles.header, { borderBottomColor: 'rgba(245, 166, 35, 0.2)', backgroundColor: '#0A0A0A' }]}>
+        <Text style={[styles.headerTitle, { color: '#FFFFFF' }]}>
+          <Text style={{ color: '#F5A623' }}>Saved</Text> Hackathons
+        </Text>
+        <Text style={[styles.headerSubtitle, { color: '#B8B8B8' }]}>
           {savedHackathons.length} hackathon{savedHackathons.length !== 1 ? 's' : ''}
         </Text>
       </View>
 
       {loading && savedHackathons.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color="#F5A623" />
         </View>
       ) : (
         <FlatList
@@ -95,7 +99,7 @@ export const SavedScreen: React.FC = () => {
             <RefreshControl
               refreshing={loading}
               onRefresh={loadSaved}
-              tintColor={theme.colors.primary}
+              tintColor="#F5A623"
             />
           }
           ListEmptyComponent={renderEmpty}
@@ -186,6 +190,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(245, 166, 35, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(245, 166, 35, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   emptyTitle: {
     fontSize: theme.typography.fontSize.xl,
