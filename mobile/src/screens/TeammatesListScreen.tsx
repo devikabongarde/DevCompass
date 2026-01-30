@@ -49,9 +49,17 @@ export const TeammatesListScreen: React.FC = () => {
     try {
       await teammatesService.sendInvite(userId, hackathon.id, 'Let\'s team up!');
       Alert.alert('Invite Sent!', `Your team invite has been sent to ${fullName}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending invite:', error);
-      Alert.alert('Error', 'Failed to send invite');
+      if (error.message === 'Only team leaders can send invites') {
+        Alert.alert('Team Leaders Only', 'Only team leaders can send invites to other participants.');
+      } else if (error.message === 'You are already on a team together for this hackathon.') {
+        Alert.alert('Already Teammates', 'You are already on a team together for this hackathon.');
+      } else if (error.message?.includes('already sent an invite')) {
+        Alert.alert('Already Sent', 'You already sent an invite to this person for this hackathon.');
+      } else {
+        Alert.alert('Error', 'Failed to send invite');
+      }
     }
   };
 

@@ -25,6 +25,7 @@ export const TeamDetailScreen: React.FC = () => {
   
   const [team, setTeam] = useState<Team>(initialTeam);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newTeamName, setNewTeamName] = useState(team.name);
   const [loading, setLoading] = useState(false);
 
@@ -45,6 +46,21 @@ export const TeamDetailScreen: React.FC = () => {
     } catch (error) {
       console.error('Error updating team name:', error);
       Alert.alert('Error', 'Failed to update team name');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    setLoading(true);
+    try {
+      await teammatesService.deleteTeam(team.id);
+      setShowDeleteModal(false);
+      Alert.alert('Team Deleted', 'The team has been deleted successfully.');
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      Alert.alert('Error', 'Failed to delete team');
     } finally {
       setLoading(false);
     }
@@ -145,6 +161,7 @@ export const TeamDetailScreen: React.FC = () => {
               paddingVertical: 12,
               borderRadius: 8,
               alignItems: 'center',
+              marginBottom: 12,
             }}
             onPress={handleChatWithTeam}
           >
@@ -152,6 +169,22 @@ export const TeamDetailScreen: React.FC = () => {
               Chat with Team
             </Text>
           </TouchableOpacity>
+
+          {isLeader && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#EF4444',
+                paddingVertical: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}
+              onPress={() => setShowDeleteModal(true)}
+            >
+              <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+                Delete Team
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Hackathon Info */}
@@ -356,6 +389,84 @@ export const TeamDetailScreen: React.FC = () => {
                   fontWeight: '600',
                 }}>
                   {loading ? 'Updating...' : 'Update'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Team Confirmation Modal */}
+      <Modal visible={showDeleteModal} animationType="fade" transparent>
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        }}>
+          <View style={{
+            backgroundColor: isDarkMode ? '#1e293b' : 'white',
+            borderRadius: 12,
+            padding: 20,
+            width: '100%',
+            maxWidth: 400,
+          }}>
+            <Text style={{
+              fontSize: 18,
+              fontWeight: 'bold',
+              color: isDarkMode ? '#f8fafc' : '#0F172A',
+              marginBottom: 12,
+            }}>
+              Delete Team?
+            </Text>
+            
+            <Text style={{
+              fontSize: 16,
+              color: isDarkMode ? '#94a3b8' : '#64748B',
+              marginBottom: 20,
+              lineHeight: 22,
+            }}>
+              Are you sure you want to delete this team? This action cannot be undone and all team members will lose access.
+            </Text>
+            
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: isDarkMode ? '#475569' : '#E5E7EB',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                onPress={() => setShowDeleteModal(false)}
+                disabled={loading}
+              >
+                <Text style={{
+                  color: isDarkMode ? '#f8fafc' : '#64748B',
+                  fontWeight: '600',
+                }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: '#EF4444',
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  opacity: loading ? 0.7 : 1,
+                }}
+                onPress={handleDeleteTeam}
+                disabled={loading}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontWeight: '600',
+                }}>
+                  {loading ? 'Deleting...' : 'Delete'}
                 </Text>
               </TouchableOpacity>
             </View>

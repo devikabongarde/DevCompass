@@ -193,6 +193,17 @@ export const teammatesService = {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) return false;
     
+    // Check if user is already on a team for this hackathon
+    const { data: teamData } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('hackathon_id', hackathonId)
+      .contains('members', [userId])
+      .limit(1)
+      .maybeSingle();
+    
+    if (teamData) return false; // Already on a team
+    
     const { data, error } = await supabase
       .from('team_seekers')
       .select('id')
@@ -206,6 +217,19 @@ export const teammatesService = {
   async lookingForTeammates(hackathonId: string, skills?: string[], bio?: string, lookingFor?: string): Promise<TeamSeeker> {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) throw new Error('User not authenticated');
+    
+    // Check if user is already on a team for this hackathon
+    const { data: teamData } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('hackathon_id', hackathonId)
+      .contains('members', [userId])
+      .limit(1)
+      .maybeSingle();
+    
+    if (teamData) {
+      throw new Error('You are already on a team for this hackathon');
+    }
     
     // Get user profile to use existing data
     const { data: profile } = await supabase
@@ -253,8 +277,23 @@ export const teammatesService = {
     
     if (error) throw error;
     
+    // Get all teams for this hackathon to filter out members
+    const { data: teams } = await supabase
+      .from('teams')
+      .select('members')
+      .eq('hackathon_id', hackathonId);
+    
+    const teamMemberIds = new Set(
+      (teams || []).flatMap(team => team.members || [])
+    );
+    
+    // Filter out users who are already on a team
+    const availableSeekers = (data || []).filter(
+      seeker => !teamMemberIds.has(seeker.user_id)
+    );
+    
     const seekersWithProfiles = await Promise.all(
-      (data || []).map(async (seeker) => {
+      availableSeekers.map(async (seeker) => {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -274,6 +313,19 @@ export const teammatesService = {
   async sendInvite(toUserId: string, hackathonId: string, message?: string): Promise<TeamInvite> {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) throw new Error('User not authenticated');
+
+    // Check if user is a team leader for this hackathon
+    const { data: userTeam } = await supabase
+      .from('teams')
+      .select('id, leader_id')
+      .eq('hackathon_id', hackathonId)
+      .eq('leader_id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!userTeam) {
+      throw new Error('Only team leaders can send invites');
+    }
 
     const { data: existingTeam } = await supabase
       .from('teams')
@@ -516,6 +568,19 @@ export const teammatesService = {
     
     if (error) throw error;
     return data;
+  },
+
+  async deleteTeam(teamId: string): Promise<void> {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) throw new Error('User not authenticated');
+    
+    const { error } = await supabase
+      .from('teams')
+      .delete()
+      .eq('id', teamId)
+      .eq('leader_id', userId);
+    
+    if (error) throw error;
   },
 };
 

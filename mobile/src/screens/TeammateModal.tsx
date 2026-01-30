@@ -91,6 +91,12 @@ export const TeammateModal: React.FC = () => {
           'You are already looking for teammates for this hackathon.',
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
+      } else if (error.message === 'You are already on a team for this hackathon') {
+        Alert.alert(
+          'Already on a Team',
+          'You are already on a team for this hackathon. You cannot look for teammates.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
       } else {
         Alert.alert('Error', 'Failed to register for teammate matching');
       }
