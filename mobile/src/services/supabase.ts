@@ -314,19 +314,6 @@ export const teammatesService = {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) throw new Error('User not authenticated');
 
-    // Check if user is a team leader for this hackathon
-    const { data: userTeam } = await supabase
-      .from('teams')
-      .select('id, leader_id')
-      .eq('hackathon_id', hackathonId)
-      .eq('leader_id', userId)
-      .limit(1)
-      .maybeSingle();
-
-    if (!userTeam) {
-      throw new Error('Only team leaders can send invites');
-    }
-
     const { data: existingTeam } = await supabase
       .from('teams')
       .select('id')
@@ -427,6 +414,18 @@ export const teammatesService = {
       const currentUserId = (await supabase.auth.getUser()).data.user?.id;
       if (currentUserId) {
         try {
+          const { data: currentUserTeam } = await supabase
+            .from('teams')
+            .select('id')
+            .eq('hackathon_id', data.hackathon_id)
+            .contains('members', [currentUserId])
+            .limit(1)
+            .maybeSingle();
+
+          if (currentUserTeam) {
+            throw new Error('You are already on a team for this hackathon.');
+          }
+
           const { data: existingTeam } = await supabase
             .from('teams')
             .select('id')

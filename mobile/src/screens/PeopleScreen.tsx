@@ -94,9 +94,13 @@ export const PeopleScreen: React.FC = () => {
           : 'The invite has been declined.'
       );
       loadData(); // Refresh
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error responding to invite:', error);
-      Alert.alert('Error', 'Failed to respond to invite');
+      if (error.message === 'You are already on a team for this hackathon.') {
+        Alert.alert('Already on a Team', 'You are already on a team for this hackathon, so you cannot accept this invite.');
+      } else {
+        Alert.alert('Error', 'Failed to respond to invite');
+      }
     }
   };
 
