@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useThemeStore, useAuthStore } from '../stores';
-import { teammatesService } from '../services/supabase';
+import { teammatesService, authService } from '../services/supabase';
 import { theme } from '../theme';
 import { Team } from '../types';
 
@@ -28,8 +28,32 @@ export const TeamDetailScreen: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newTeamName, setNewTeamName] = useState(team.name);
   const [loading, setLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(user?.id ?? null);
 
-  const isLeader = user?.id === team.leader_id;
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveUserId = async () => {
+      if (user?.id) {
+        if (isMounted) setCurrentUserId(user.id);
+        return;
+      }
+      try {
+        const currentUser = await authService.getCurrentUser();
+        if (isMounted) setCurrentUserId(currentUser?.id ?? null);
+      } catch (error) {
+        console.error('Error loading current user:', error);
+      }
+    };
+
+    resolveUserId();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  const isLeader = currentUserId === team.leader_id;
 
   const handleUpdateTeamName = async () => {
     if (!newTeamName.trim()) {

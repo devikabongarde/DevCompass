@@ -167,9 +167,9 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
         {/* Tags */}
         {hackathon.themes.length > 0 && (
           <View style={styles.tagsContainer}>
-            {hackathon.themes.slice(0, 3).map((theme, index) => (
+            {hackathon.themes.slice(0, 3).map((themeName, index) => (
               <View key={index} style={[styles.tag, { backgroundColor: isDarkMode ? '#334155' : theme.colors.primaryLight }]}>
-                <Text style={[styles.tagText, { color: isDarkMode ? '#94a3b8' : theme.colors.primary }]}>{theme}</Text>
+                <Text style={[styles.tagText, { color: isDarkMode ? '#94a3b8' : theme.colors.primary }]}>{themeName}</Text>
               </View>
             ))}
             {hackathon.themes.length > 3 && (

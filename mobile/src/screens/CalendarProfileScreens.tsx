@@ -329,7 +329,7 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC' }]}>
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 48 }}>
         {/* Profile Header */}
         <View style={[styles.profileHeader, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
           <View style={[styles.avatarContainer, { backgroundColor: isDarkMode ? '#334155' : '#EEF2FF' }]}>
