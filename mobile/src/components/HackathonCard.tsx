@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -35,15 +35,20 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
   const saved = isSaved(hackathon.id);
   const [liked, setLiked] = useState(false);
   const [likeAnimation] = useState(new Animated.Value(0));
-  const [lastTap, setLastTap] = useState(0);
+  const lastTapRef = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const insets = useSafeAreaInsets();
 
   const handleDoubleTap = () => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
     
-    if (lastTap && (now - lastTap) < DOUBLE_PRESS_DELAY) {
+    if (lastTapRef.current && (now - lastTapRef.current) < DOUBLE_PRESS_DELAY) {
       // Double tap - like the hackathon
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       setLiked(!liked);
       Animated.sequence([
         Animated.timing(likeAnimation, {
@@ -57,14 +62,18 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
           useNativeDriver: true,
         }),
       ]).start();
-      setLastTap(0); // Reset to prevent details from opening
+      lastTapRef.current = 0;
     } else {
-      setLastTap(now);
+      lastTapRef.current = now;
       // Single tap - open details after delay
-      setTimeout(() => {
-        if (lastTap === now) { // Only open if no second tap occurred
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        if (lastTapRef.current === now) { // Only open if no second tap occurred
           onPress();
         }
+        timeoutRef.current = null;
       }, DOUBLE_PRESS_DELAY);
     }
   };
@@ -184,7 +193,19 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
             {hackathon.prize_money && (
               <View style={styles.infoItem}>
                 <Ionicons name="trophy" size={16} color={theme.colors.secondary} />
-                <Text style={[styles.infoText, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>{hackathon.prize_money}</Text>
+                <Text style={[styles.infoText, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>
+                  {(() => {
+                    let prize = hackathon.prize_money;
+                    prize = prize.replace(/<[^>]*>/g, '');
+                    prize = prize.replace(/&nbsp;/g, ' ');
+                    prize = prize.replace(/&amp;/g, '&');
+                    prize = prize.replace(/&lt;/g, '<');
+                    prize = prize.replace(/&gt;/g, '>');
+                    prize = prize.replace(/&quot;/g, '"');
+                    prize = prize.replace(/\s+/g, ' ').trim();
+                    return prize || 'N/A';
+                  })()}
+                </Text>
               </View>
             )}
             

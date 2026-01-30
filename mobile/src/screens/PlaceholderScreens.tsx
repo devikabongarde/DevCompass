@@ -118,7 +118,20 @@ export const HackathonDetailScreen: React.FC = () => {
                 <Text style={styles.infoIcon}>💰</Text>
                 <Text style={[styles.infoLabel, { color: isDarkMode ? '#94a3b8' : '#64748B' }]}>Prize</Text>
                 <Text style={[styles.infoValue, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>
-                  {hackathon.prize_money.replace(/<[^>]*>/g, '').replace(/&gt;/g, '>')}
+                  {(() => {
+                    let prize = hackathon.prize_money;
+                    // Remove all HTML tags
+                    prize = prize.replace(/<[^>]*>/g, '');
+                    // Decode HTML entities
+                    prize = prize.replace(/&nbsp;/g, ' ');
+                    prize = prize.replace(/&amp;/g, '&');
+                    prize = prize.replace(/&lt;/g, '<');
+                    prize = prize.replace(/&gt;/g, '>');
+                    prize = prize.replace(/&quot;/g, '"');
+                    // Clean up whitespace
+                    prize = prize.replace(/\s+/g, ' ').trim();
+                    return prize || 'N/A';
+                  })()}
                 </Text>
               </View>
             )}
