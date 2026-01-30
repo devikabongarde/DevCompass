@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Animated,
+  Share,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Hackathon } from '../types';
 import { theme } from '../theme';
-import { useSavedStore } from '../stores';
+import { useSavedStore, useThemeStore } from '../stores';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -18,15 +21,67 @@ interface HackathonCardProps {
   hackathon: Hackathon;
   onPress: () => void;
   onSave?: () => void;
+  onShare?: (hackathon: Hackathon) => void;
 }
 
 export const HackathonCard: React.FC<HackathonCardProps> = ({
   hackathon,
   onPress,
   onSave,
+  onShare,
 }) => {
   const { isSaved, saveHackathon, unsaveHackathon } = useSavedStore();
+  const { isDarkMode = false } = useThemeStore();
   const saved = isSaved(hackathon.id);
+  const [liked, setLiked] = useState(false);
+  const [likeAnimation] = useState(new Animated.Value(0));
+  const [lastTap, setLastTap] = useState(0);
+  const insets = useSafeAreaInsets();
+
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 300;
+    
+    if (lastTap && (now - lastTap) < DOUBLE_PRESS_DELAY) {
+      // Double tap - like the hackathon
+      setLiked(!liked);
+      Animated.sequence([
+        Animated.timing(likeAnimation, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(likeAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      setLastTap(0); // Reset to prevent details from opening
+    } else {
+      setLastTap(now);
+      // Single tap - open details after delay
+      setTimeout(() => {
+        if (lastTap === now) { // Only open if no second tap occurred
+          onPress();
+        }
+      }, DOUBLE_PRESS_DELAY);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      if (onShare) {
+        onShare(hackathon);
+      } else {
+        await Share.share({
+          message: `Check out this hackathon: ${hackathon.title}\n\n${hackathon.short_summary || hackathon.description}\n\nLink: ${hackathon.original_url}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -60,14 +115,14 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.95}>
+    <TouchableOpacity style={[styles.container, { backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface }]} onPress={handleDoubleTap} activeOpacity={0.95}>
       {/* Banner Image */}
       <View style={styles.imageContainer}>
         {hackathon.banner_url ? (
           <Image source={{ uri: hackathon.banner_url }} style={styles.image} />
         ) : (
-          <View style={[styles.image, styles.placeholderImage]}>
-            <Ionicons name="code-slash" size={48} color={theme.colors.textLight} />
+          <View style={[styles.image, styles.placeholderImage, { backgroundColor: isDarkMode ? '#334155' : theme.colors.backgroundSecondary }]}>
+            <Ionicons name="code-slash" size={48} color={isDarkMode ? '#64748b' : theme.colors.textLight} />
           </View>
         )}
         
@@ -78,23 +133,34 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
           </Text>
         </View>
 
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Ionicons
-            name={saved ? 'bookmark' : 'bookmark-outline'}
-            size={24}
-            color={saved ? theme.colors.secondary : theme.colors.text}
-          />
-        </TouchableOpacity>
+        {/* Like Animation */}
+        <Animated.View
+          style={[
+            styles.likeAnimation,
+            {
+              opacity: likeAnimation,
+              transform: [
+                {
+                  scale: likeAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.5, 1.2],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Ionicons name="heart" size={80} color="#EF4444" />
+        </Animated.View>
       </View>
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: isDarkMode ? '#f8fafc' : theme.colors.text }]} numberOfLines={2}>
           {hackathon.title}
         </Text>
         
-        <Text style={styles.summary} numberOfLines={3}>
+        <Text style={[styles.summary, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]} numberOfLines={3}>
           {hackathon.short_summary || hackathon.description}
         </Text>
 
@@ -102,12 +168,12 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
         {hackathon.themes.length > 0 && (
           <View style={styles.tagsContainer}>
             {hackathon.themes.slice(0, 3).map((theme, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{theme}</Text>
+              <View key={index} style={[styles.tag, { backgroundColor: isDarkMode ? '#334155' : theme.colors.primaryLight }]}>
+                <Text style={[styles.tagText, { color: isDarkMode ? '#94a3b8' : theme.colors.primary }]}>{theme}</Text>
               </View>
             ))}
             {hackathon.themes.length > 3 && (
-              <Text style={styles.moreTagsText}>+{hackathon.themes.length - 3}</Text>
+              <Text style={[styles.moreTagsText, { color: isDarkMode ? '#64748b' : theme.colors.textLight }]}>+{hackathon.themes.length - 3}</Text>
             )}
           </View>
         )}
@@ -118,7 +184,7 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
             {hackathon.prize_money && (
               <View style={styles.infoItem}>
                 <Ionicons name="trophy" size={16} color={theme.colors.secondary} />
-                <Text style={styles.infoText}>{hackathon.prize_money}</Text>
+                <Text style={[styles.infoText, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>{hackathon.prize_money}</Text>
               </View>
             )}
             
@@ -137,14 +203,41 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
               <Ionicons 
                 name={hackathon.location_mode === 'online' ? 'globe' : 'location'} 
                 size={16} 
-                color={theme.colors.textSecondary} 
+                color={isDarkMode ? '#94a3b8' : theme.colors.textSecondary} 
               />
-              <Text style={styles.infoText}>
+              <Text style={[styles.infoText, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>
                 {hackathon.location_mode.charAt(0).toUpperCase() + hackathon.location_mode.slice(1)}
               </Text>
             </View>
           )}
         </View>
+      </View>
+
+      {/* Action Buttons - Moved to bottom */}
+      <View style={styles.actionButtons}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => setLiked(!liked)}>
+          <Ionicons
+            name={liked ? 'heart' : 'heart-outline'}
+            size={28}
+            color={liked ? '#EF4444' : 'white'}
+          />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
+          <Ionicons
+            name={saved ? 'bookmark' : 'bookmark-outline'}
+            size={28}
+            color={saved ? theme.colors.secondary : 'white'}
+          />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+          <Ionicons
+            name="paper-plane-outline"
+            size={28}
+            color="white"
+          />
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -153,9 +246,10 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: screenWidth,
-    height: screenHeight * 0.85, // Take most of screen height
-    backgroundColor: theme.colors.surface,
+    height: screenHeight,
     ...theme.shadows.lg,
+    paddingTop: 100, // Account for top bar
+    paddingBottom: 80, // Account for bottom navigation
   },
   imageContainer: {
     height: '45%',
@@ -167,7 +261,6 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   placeholderImage: {
-    backgroundColor: theme.colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -184,14 +277,26 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
   },
-  saveButton: {
+  actionButtons: {
     position: 'absolute',
-    top: theme.spacing.md,
-    right: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.full,
-    padding: theme.spacing.sm,
-    ...theme.shadows.md,
+    bottom: 20,
+    right: 16,
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  actionButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  likeAnimation: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -40,
+    marginLeft: -40,
+    zIndex: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
@@ -201,12 +306,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.typography.fontSize['2xl'],
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
     marginBottom: theme.spacing.sm,
   },
   summary: {
     fontSize: theme.typography.fontSize.base,
-    color: theme.colors.textSecondary,
     lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
     marginBottom: theme.spacing.md,
   },
@@ -217,7 +320,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   tag: {
-    backgroundColor: theme.colors.primaryLight,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.sm,
@@ -226,12 +328,10 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary,
     fontWeight: theme.typography.fontWeight.medium,
   },
   moreTagsText: {
     fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textLight,
     marginLeft: theme.spacing.xs,
   },
   bottomInfo: {
@@ -249,7 +349,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
   },
 });

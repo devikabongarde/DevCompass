@@ -14,20 +14,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useThemeStore, useAuthStore } from '../stores';
-import { teammatesService, profileService } from '../services/supabase';
+import { teammatesService, profileService, messageService } from '../services/supabase';
 import { theme } from '../theme';
-import { TeamInvite, Team, Profile } from '../types';
+import { TeamInvite, Team, Profile, Message } from '../types';
 
 export const PeopleScreen: React.FC = () => {
   const navigation = useNavigation();
   const { isDarkMode = false } = useThemeStore();
   const { user } = useAuthStore();
   
-  const [activeTab, setActiveTab] = useState<'search' | 'invites' | 'teams'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'messages' | 'invites' | 'teams'>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [invites, setInvites] = useState<TeamInvite[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadData = async () => {
@@ -39,6 +40,9 @@ export const PeopleScreen: React.FC = () => {
       } else if (activeTab === 'teams') {
         const data = await teammatesService.getUserTeams();
         setTeams(data);
+      } else if (activeTab === 'messages') {
+        const data = await messageService.getConversations();
+        setConversations(data);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -263,10 +267,73 @@ export const PeopleScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const renderConversation = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      style={cardStyle}
+      onPress={() => navigation.navigate('ChatScreen' as never, { userId: item.other_user.id } as never)}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{
+          width: 50,
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: theme.colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 12,
+        }}>
+          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
+            {item.other_user.full_name?.charAt(0) || 'U'}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: isDarkMode ? '#f8fafc' : '#0F172A',
+          }}>
+            {item.other_user.full_name}
+          </Text>
+          <Text style={{
+            fontSize: 14,
+            color: isDarkMode ? '#94a3b8' : '#64748B',
+          }} numberOfLines={1}>
+            {item.last_message?.content || 'No messages yet'}
+          </Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          {item.last_message?.created_at && (
+            <Text style={{
+              fontSize: 12,
+              color: isDarkMode ? '#64748b' : '#94A3B8',
+            }}>
+              {new Date(item.last_message.created_at).toLocaleDateString()}
+            </Text>
+          )}
+          {item.unread_count > 0 && (
+            <View style={{
+              backgroundColor: theme.colors.primary,
+              borderRadius: 10,
+              minWidth: 20,
+              height: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: 4,
+            }}>
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+                {item.unread_count}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   const renderEmptyState = () => (
     <View style={{ alignItems: 'center', paddingVertical: 40 }}>
       <Ionicons 
-        name={activeTab === 'invites' ? 'mail-outline' : 'people-outline'} 
+        name={activeTab === 'messages' ? 'chatbubble-outline' : activeTab === 'invites' ? 'mail-outline' : 'people-outline'} 
         size={48} 
         color={isDarkMode ? '#64748b' : '#94A3B8'} 
       />
@@ -276,7 +343,9 @@ export const PeopleScreen: React.FC = () => {
         textAlign: 'center',
         marginTop: 12,
       }}>
-        {activeTab === 'invites' 
+        {activeTab === 'messages'
+          ? 'No conversations yet\nStart chatting with teammates!'
+          : activeTab === 'invites' 
           ? 'No team invites yet\nSwipe right on hackathons to find teammates!'
           : 'No teams yet\nAccept invites or create teams to get started!'
         }
@@ -295,6 +364,12 @@ export const PeopleScreen: React.FC = () => {
             onPress={() => setActiveTab('search')}
           >
             <Text style={tabTextStyle(activeTab === 'search')}>Search</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tabButtonStyle(activeTab === 'messages')}
+            onPress={() => setActiveTab('messages')}
+          >
+            <Text style={tabTextStyle(activeTab === 'messages')}>Messages</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={tabButtonStyle(activeTab === 'invites')}
@@ -399,6 +474,16 @@ export const PeopleScreen: React.FC = () => {
               showsVerticalScrollIndicator={false}
             />
           </>
+        )}
+        
+        {activeTab === 'messages' && (
+          <FlatList
+            data={conversations}
+            renderItem={renderConversation}
+            keyExtractor={(item) => item.other_user.id}
+            ListEmptyComponent={renderEmptyState}
+            showsVerticalScrollIndicator={false}
+          />
         )}
         
         {activeTab === 'invites' && (

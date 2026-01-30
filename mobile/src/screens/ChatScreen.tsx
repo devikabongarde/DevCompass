@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useThemeStore, useAuthStore } from '../stores';
-import { messageService, profileService } from '../services/supabase';
+import { messageService, profileService, hackathonService } from '../services/supabase';
 import { theme } from '../theme';
 import { Message, Profile } from '../types';
 
@@ -63,6 +63,23 @@ export const ChatScreen: React.FC = () => {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isMe = item.from_user_id === user?.id;
+    const isHackathonShare = item.message_type === 'hackathon_share';
+    
+    // Extract hackathon ID from content
+    const hackathonIdMatch = item.content.match(/\[HACKATHON:([^\]]+)\]/);
+    const hackathonId = hackathonIdMatch ? hackathonIdMatch[1] : null;
+    const displayContent = item.content.replace(/\[HACKATHON:[^\]]+\]/, '').trim();
+    
+    const handleHackathonPress = async () => {
+      if (hackathonId) {
+        try {
+          const hackathon = await hackathonService.getHackathon(hackathonId);
+          navigation.navigate('HackathonDetail' as never, { hackathon } as never);
+        } catch (error) {
+          console.error('Error loading hackathon:', error);
+        }
+      }
+    };
     
     return (
       <View style={{
@@ -71,24 +88,62 @@ export const ChatScreen: React.FC = () => {
         marginBottom: 12,
         paddingHorizontal: 16,
       }}>
-        <View style={{
-          maxWidth: '80%',
-          backgroundColor: isMe 
-            ? theme.colors.primary 
-            : (isDarkMode ? '#334155' : '#F1F5F9'),
-          borderRadius: 16,
-          padding: 12,
-          borderBottomRightRadius: isMe ? 4 : 16,
-          borderBottomLeftRadius: isMe ? 16 : 4,
-        }}>
+        <TouchableOpacity
+          style={{
+            maxWidth: '80%',
+            backgroundColor: isHackathonShare
+              ? (isDarkMode ? '#1e40af' : '#3b82f6')
+              : isMe 
+              ? theme.colors.primary 
+              : (isDarkMode ? '#334155' : '#F1F5F9'),
+            borderRadius: 16,
+            padding: 12,
+            borderBottomRightRadius: isMe ? 4 : 16,
+            borderBottomLeftRadius: isMe ? 16 : 4,
+            borderWidth: isHackathonShare ? 1 : 0,
+            borderColor: isHackathonShare ? (isDarkMode ? '#3b82f6' : '#1d4ed8') : 'transparent',
+          }}
+          onPress={isHackathonShare ? handleHackathonPress : undefined}
+          disabled={!isHackathonShare}
+        >
+          {isHackathonShare && (
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 8,
+            }}>
+              <Ionicons name="trophy" size={16} color="white" />
+              <Text style={{
+                color: 'white',
+                fontSize: 12,
+                fontWeight: 'bold',
+                marginLeft: 4,
+              }}>
+                HACKATHON
+              </Text>
+            </View>
+          )}
+          
           <Text style={{
-            color: isMe ? 'white' : (isDarkMode ? '#f8fafc' : '#0F172A'),
+            color: isHackathonShare ? 'white' : isMe ? 'white' : (isDarkMode ? '#f8fafc' : '#0F172A'),
             fontSize: 16,
           }}>
-            {item.content}
+            {displayContent}
           </Text>
+          
+          {isHackathonShare && (
+            <Text style={{
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: 12,
+              marginTop: 4,
+              fontStyle: 'italic',
+            }}>
+              Tap to view details
+            </Text>
+          )}
+          
           <Text style={{
-            color: isMe ? 'rgba(255,255,255,0.7)' : (isDarkMode ? '#94a3b8' : '#64748B'),
+            color: isHackathonShare ? 'rgba(255,255,255,0.7)' : isMe ? 'rgba(255,255,255,0.7)' : (isDarkMode ? '#94a3b8' : '#64748B'),
             fontSize: 12,
             marginTop: 4,
           }}>
@@ -97,7 +152,7 @@ export const ChatScreen: React.FC = () => {
               minute: '2-digit' 
             })}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     );
   };

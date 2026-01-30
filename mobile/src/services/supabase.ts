@@ -274,6 +274,30 @@ export const teammatesService = {
   async sendInvite(toUserId: string, hackathonId: string, message?: string): Promise<TeamInvite> {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) throw new Error('User not authenticated');
+
+    const { data: existingTeam } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('hackathon_id', hackathonId)
+      .contains('members', [userId, toUserId])
+      .limit(1)
+      .maybeSingle();
+
+    if (existingTeam) {
+      throw new Error('You are already on a team together for this hackathon.');
+    }
+
+    const { data: existingInvite } = await supabase
+      .from('team_invites')
+      .select('id,status')
+      .eq('hackathon_id', hackathonId)
+      .or(`and(from_user_id.eq.${userId},to_user_id.eq.${toUserId}),and(from_user_id.eq.${toUserId},to_user_id.eq.${userId})`)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingInvite) {
+      throw new Error('You already sent an invite for this hackathon.');
+    }
     
     const { data, error } = await supabase
       .from('team_invites')
@@ -351,17 +375,34 @@ export const teammatesService = {
       const currentUserId = (await supabase.auth.getUser()).data.user?.id;
       if (currentUserId) {
         try {
-          // Create team with both users
-          const { data: team } = await supabase
+          const { data: existingTeam } = await supabase
             .from('teams')
-            .insert({
-              hackathon_id: data.hackathon_id,
-              name: 'New Team',
-              leader_id: data.from_user_id,
-              members: [data.from_user_id, currentUserId]
-            })
-            .select('*')
-            .single();
+            .select('id')
+            .eq('hackathon_id', data.hackathon_id)
+            .contains('members', [currentUserId, data.from_user_id])
+            .limit(1)
+            .maybeSingle();
+
+          if (!existingTeam) {
+            // Create team with both users (leader auto-added by trigger)
+            const { data: team } = await supabase
+              .from('teams')
+              .insert({
+                hackathon_id: data.hackathon_id,
+                name: 'New Team',
+                leader_id: currentUserId,
+                members: [data.from_user_id]
+              })
+              .select('*')
+              .single();
+          }
+
+          // Remove both users from team_seekers for this hackathon
+          await supabase
+            .from('team_seekers')
+            .delete()
+            .eq('hackathon_id', data.hackathon_id)
+            .in('user_id', [currentUserId, data.from_user_id]);
           
           // Create welcome message
           await supabase
@@ -571,9 +612,11 @@ export const followService = {
 };
 
 export const messageService = {
-  async sendMessage(toUserId: string, content: string, teamId?: string): Promise<Message> {
+  async sendMessage(toUserId: string, content: string, teamId?: string, hackathonId?: string): Promise<Message> {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     if (!userId) throw new Error('User not authenticated');
+    
+    const messageContent = hackathonId ? `${content}\n\n[HACKATHON:${hackathonId}]` : content;
     
     const { data, error } = await supabase
       .from('messages')
@@ -581,8 +624,8 @@ export const messageService = {
         from_user_id: userId,
         to_user_id: toUserId,
         team_id: teamId,
-        content,
-        message_type: 'text'
+        content: messageContent,
+        message_type: hackathonId ? 'hackathon_share' : 'text'
       })
       .select()
       .single();
@@ -642,45 +685,56 @@ export const messageService = {
   async getConversations(): Promise<any[]> {
     const currentUserId = (await supabase.auth.getUser()).data.user?.id;
     if (!currentUserId) return [];
-    
-    const { data, error } = await supabase
+
+    // Get all messages involving the current user
+    const { data: messages, error } = await supabase
       .from('messages')
       .select('*')
       .or(`from_user_id.eq.${currentUserId},to_user_id.eq.${currentUserId}`)
+      .is('team_id', null)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
+
+    // Group messages by conversation partner
+    const conversationMap = new Map();
     
-    const conversations = new Map();
-    const profileCache = new Map();
-    
-    // Process messages and build conversations
-    for (const message of data || []) {
+    for (const message of messages || []) {
       const otherUserId = message.from_user_id === currentUserId 
         ? message.to_user_id 
         : message.from_user_id;
       
-      if (!conversations.has(otherUserId)) {
-        // Fetch profile if not cached
-        if (!profileCache.has(otherUserId)) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', otherUserId)
-            .single();
-          profileCache.set(otherUserId, profile);
-        }
-        
-        conversations.set(otherUserId, {
-          userId: otherUserId,
-          profile: profileCache.get(otherUserId),
-          lastMessage: message,
-          unreadCount: 0
+      if (!conversationMap.has(otherUserId)) {
+        conversationMap.set(otherUserId, {
+          other_user_id: otherUserId,
+          last_message: message,
+          unread_count: 0
         });
       }
+      
+      // Count unread messages (messages sent to current user that are unread)
+      if (message.to_user_id === currentUserId && !message.is_read) {
+        conversationMap.get(otherUserId).unread_count++;
+      }
     }
-    
-    return Array.from(conversations.values());
+
+    // Get profiles for all conversation partners
+    const conversations = await Promise.all(
+      Array.from(conversationMap.values()).map(async (conv) => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', conv.other_user_id)
+          .single();
+        
+        return {
+          ...conv,
+          other_user: profile
+        };
+      })
+    );
+
+    return conversations.filter(conv => conv.other_user);
   },
 };
 

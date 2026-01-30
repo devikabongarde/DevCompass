@@ -11,190 +11,29 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useFeedStore, useSavedStore, useThemeStore, useTeammatesStore } from '../stores';
 import { theme } from '../theme';
 import { Hackathon } from '../types';
+import { HackathonCard } from '../components/HackathonCard';
+import { messageService, profileService } from '../services/supabase';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 const CARD_HEIGHT = screenHeight;
-
-interface HackathonCardProps {
-  hackathon: Hackathon;
-  onSave: () => void;
-  onPress: () => void;
-  onTeammate: () => void;
-  isSaved: boolean;
-  isLookingForTeammates: boolean;
-}
-
-const HackathonCard: React.FC<HackathonCardProps> = ({ hackathon, onSave, onPress, onTeammate, isSaved, isLookingForTeammates }) => {
-  const { isDarkMode = false } = useThemeStore();
-  const navigation = useNavigation();
-  
-  const formatDeadline = (deadline?: string) => {
-    if (!deadline) return null;
-    // For now, extract readable info from description
-    if (hackathon.description.includes('Dates:')) {
-      const dateMatch = hackathon.description.match(/Dates: ([^.]+)/);
-      return dateMatch ? dateMatch[1] : 'Check details';
-    }
-    return 'Check details';
-  };
-
-  const getPlatformColor = () => {
-    return hackathon.platform_source === 'unstop' ? '#FF6B35' : '#003E54';
-  };
-
-  const handleSwipe = ({ nativeEvent }: any) => {
-    if (nativeEvent.state === State.END) {
-      if (nativeEvent.translationX < -100) {
-        // Left swipe - add/remove from calendar
-        if (isSaved) {
-          Alert.alert(
-            'Removed from Calendar',
-            `${hackathon.title} has been removed from your calendar!`,
-            [{ text: 'OK' }]
-          );
-        } else {
-          Alert.alert(
-            'Added to Calendar',
-            `${hackathon.title} has been added to your calendar!`,
-            [{ text: 'OK' }]
-          );
-        }
-        onSave(); // Toggle save state
-      } else if (nativeEvent.translationX > 100) {
-        // Right swipe - looking for teammates
-        if (isLookingForTeammates) {
-          // Already looking, navigate to teammates list
-          navigation.navigate('TeammatesListScreen' as never, { hackathon } as never);
-        } else {
-          // Not looking yet, show registration modal
-          onTeammate();
-        }
-      }
-    }
-  };
-
-  return (
-    <PanGestureHandler 
-      onHandlerStateChange={handleSwipe}
-      activeOffsetX={[-50, 50]}
-      failOffsetY={[-20, 20]}
-    >
-      <View style={styles.card}>
-        <TouchableOpacity onPress={onPress} activeOpacity={0.95} style={styles.cardContent}>
-      {/* Banner Image */}
-      <View style={styles.imageContainer}>
-        {hackathon.banner_url ? (
-          <Image source={{ uri: hackathon.banner_url }} style={styles.bannerImage} />
-        ) : (
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={styles.bannerImage}
-          >
-            <Ionicons name="code-slash" size={48} color="white" />
-          </LinearGradient>
-        )}
-        
-        {/* Gradient Overlay */}
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.7)']}
-          style={styles.imageOverlay}
-        />
-        
-        {/* Platform Badge */}
-        <View style={[styles.platformBadge, { backgroundColor: getPlatformColor() }]}>
-          <Text style={styles.platformText}>
-            {hackathon.platform_source.toUpperCase()}
-          </Text>
-        </View>
-
-        {/* Teammate Status Badge */}
-        {isLookingForTeammates && (
-          <TouchableOpacity 
-            style={styles.teammatesBadge}
-            onPress={() => navigation.navigate('TeammatesListScreen' as never, { hackathon } as never)}
-          >
-            <Ionicons name="people" size={16} color="white" />
-            <Text style={styles.teammatesText}>View teammates</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton} onPress={onSave}>
-          <Ionicons
-            name={isSaved ? 'heart' : 'heart-outline'}
-            size={28}
-            color={isSaved ? '#EF4444' : 'white'}
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Content Section */}
-      <View style={[styles.contentSection, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
-        <Text style={[styles.title, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]} numberOfLines={2}>
-          {hackathon.title}
-        </Text>
-        
-        <Text style={[styles.description, { color: isDarkMode ? '#94a3b8' : '#64748B' }]} numberOfLines={3}>
-          {hackathon.short_summary || hackathon.description}
-        </Text>
-
-        {/* Metadata */}
-        <View style={styles.metadataContainer}>
-          {hackathon.prize_money && (
-            <View style={styles.metadataRow}>
-              <Text style={styles.metadataIcon}>💰</Text>
-              <Text style={styles.prizeText}>
-                {hackathon.prize_money.replace(/<[^>]*>/g, '').replace(/&gt;/g, '>')}
-              </Text>
-            </View>
-          )}
-          
-          <View style={styles.metadataRow}>
-            <Text style={styles.metadataIcon}>📅</Text>
-            <Text style={styles.deadlineText}>
-              {formatDeadline(hackathon.registration_deadline) || 'Check details'}
-            </Text>
-          </View>
-
-          {hackathon.themes.length > 0 && (
-            <View style={styles.tagsRow}>
-              <Text style={styles.metadataIcon}>🏷️</Text>
-              <View style={styles.tagsContainer}>
-                {hackathon.themes.slice(0, 3).map((theme, index) => (
-                  <View key={index} style={[styles.tag, { backgroundColor: isDarkMode ? '#334155' : '#EEF2FF' }]}>
-                    <Text style={[styles.tagText, { color: isDarkMode ? '#a5b4fc' : '#6366F1' }]}>{theme}</Text>
-                  </View>
-                ))}
-                {hackathon.themes.length > 3 && (
-                  <Text style={[styles.moreTagsText, { color: isDarkMode ? '#64748b' : '#94A3B8' }]}>+{hackathon.themes.length - 3}</Text>
-                )}
-              </View>
-            </View>
-          )}
-        </View>
-
-
-      </View>
-        </TouchableOpacity>
-      </View>
-    </PanGestureHandler>
-  );
-};
 
 export const FeedScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
   const navigation = useNavigation();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   
   const {
     hackathons,
@@ -218,7 +57,7 @@ export const FeedScreen: React.FC = () => {
     hackathons.forEach(hackathon => {
       checkTeammateStatus(hackathon.id);
     });
-  }, [hackathons.length]);
+  }, [hackathons.length, loadHackathons, checkTeammateStatus]);
 
   const handleViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
@@ -236,6 +75,35 @@ export const FeedScreen: React.FC = () => {
     navigation.navigate('HackathonDetail' as never, { hackathon } as never);
   };
 
+  const handleShare = async (hackathon: Hackathon) => {
+    setSelectedHackathon(hackathon);
+    try {
+      const results = await profileService.searchProfiles('');
+      setSearchResults(results.slice(0, 10));
+      setShareModalVisible(true);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const handleSendToUser = async (userId: string, userName: string) => {
+    if (!selectedHackathon) return;
+    
+    try {
+      await messageService.sendMessage(
+        userId,
+        `Check out this hackathon: ${selectedHackathon.title}\n\n${selectedHackathon.short_summary || selectedHackathon.description}`,
+        undefined,
+        selectedHackathon.id
+      );
+      setShareModalVisible(false);
+      Alert.alert('Shared!', `Hackathon shared with ${userName}`);
+    } catch (error) {
+      console.error('Error sharing hackathon:', error);
+      Alert.alert('Error', 'Failed to share hackathon');
+    }
+  };
+
   const handleSave = async (hackathon: Hackathon) => {
     try {
       if (isSaved(hackathon.id)) {
@@ -248,26 +116,33 @@ export const FeedScreen: React.FC = () => {
     }
   };
 
-  const handleTeammate = (hackathon: Hackathon) => {
-    if (isLookingFor(hackathon.id)) {
-      // Already looking for teammates, show teammates list
-      navigation.navigate('TeammatesListScreen' as never, { hackathon } as never);
-    } else {
-      // Not looking yet, show registration modal
-      navigation.navigate('TeammateModal' as never, { hackathon } as never);
-    }
-  };
+  const renderHackathon = ({ item }: { item: Hackathon }) => {
+    const panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dx) > 20;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dx > 100) {
+          // Swipe right - find teammates
+          navigation.navigate('TeammatesListScreen' as never, { hackathon: item } as never);
+        } else if (gestureState.dx < -100) {
+          // Swipe left - save hackathon
+          handleSave(item);
+        }
+      },
+    });
 
-  const renderHackathon = ({ item }: { item: Hackathon }) => (
-    <HackathonCard
-      hackathon={item}
-      onSave={() => handleSave(item)}
-      onPress={() => handleHackathonPress(item)}
-      onTeammate={() => handleTeammate(item)}
-      isSaved={isSaved(item.id)}
-      isLookingForTeammates={isLookingFor(item.id)}
-    />
-  );
+    return (
+      <View {...panResponder.panHandlers}>
+        <HackathonCard
+          hackathon={item}
+          onSave={() => handleSave(item)}
+          onPress={() => handleHackathonPress(item)}
+          onShare={handleShare}
+        />
+      </View>
+    );
+  };
 
   const renderEmpty = () => {
     if (loading && hackathons.length === 0) {
@@ -373,6 +248,43 @@ export const FeedScreen: React.FC = () => {
           <Text style={[styles.progressText, { color: isDarkMode ? '#94a3b8' : 'white' }]}>
             {currentIndex + 1} / {hackathons.length}
           </Text>
+        </View>
+      )}
+
+      {/* Share Modal */}
+      {shareModalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.shareModal, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
+            <Text style={[styles.shareTitle, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>
+              Share Hackathon
+            </Text>
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.userItem}
+                  onPress={() => handleSendToUser(item.id, item.full_name)}
+                >
+                  <View style={styles.userAvatar}>
+                    <Text style={styles.userAvatarText}>
+                      {item.full_name?.charAt(0) || 'U'}
+                    </Text>
+                  </View>
+                  <Text style={[styles.userName, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>
+                    {item.full_name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              style={styles.userList}
+            />
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShareModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
@@ -619,5 +531,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     marginLeft: 4,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  shareModal: {
+    width: '80%',
+    maxHeight: '60%',
+    borderRadius: 12,
+    padding: 20,
+  },
+  shareTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  userList: {
+    maxHeight: 300,
+  },
+  userItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  userAvatarText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  cancelButton: {
+    backgroundColor: '#EF4444',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
