@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -34,11 +34,18 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
 }) => {
   const { isSaved, saveHackathon, unsaveHackathon } = useSavedStore();
   const { isDarkMode = false } = useThemeStore();
-  const saved = isSaved(hackathon.id);
   const [liked, setLiked] = useState(false);
+  const [localSaved, setLocalSaved] = useState(() => isSaved(hackathon.id));
   const [likeAnimation] = useState(new Animated.Value(0));
   const lastTapRef = useRef(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saved = isSaved(hackathon.id);
+
+  // Sync localSaved with store state
+  useEffect(() => {
+    setLocalSaved(saved);
+  }, [saved]);
 
   const handleDoubleTap = () => {
     const now = Date.now();
@@ -95,10 +102,12 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
 
   const handleSave = async () => {
     try {
-      if (saved) {
+      if (localSaved) {
         await unsaveHackathon(hackathon.id);
+        setLocalSaved(false);
       } else {
         await saveHackathon(hackathon);
+        setLocalSaved(true);
       }
       onSave?.();
     } catch (error) {
@@ -252,8 +261,16 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
         </View>
 
         {/* Action Buttons inside the floating card */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => setLiked(!liked)}>
+        <View 
+          style={styles.actionButtons}
+          onStartShouldSetResponder={() => true}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => setLiked(!liked)}
+            activeOpacity={0.7}
+          >
             <View style={[styles.iconCircle, { borderColor: liked ? '#EF4444' : '#F5A623' }]}>
               <Ionicons
                 name={liked ? 'heart' : 'heart-outline'}
@@ -263,17 +280,25 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
-            <View style={[styles.iconCircle, { borderColor: saved ? '#FFD700' : '#F5A623' }]}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={handleSave}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.iconCircle, { borderColor: localSaved ? '#FFD700' : '#F5A623' }]}>
               <Ionicons
-                name={saved ? 'bookmark' : 'bookmark-outline'}
+                name={localSaved ? 'bookmark' : 'bookmark-outline'}
                 size={24}
-                color={saved ? '#FFD700' : '#F5A623'}
+                color={localSaved ? '#FFD700' : '#F5A623'}
               />
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={handleShare}
+            activeOpacity={0.7}
+          >
             <View style={[styles.iconCircle, { borderColor: '#F5A623' }]}>
               <Ionicons
                 name="paper-plane"
