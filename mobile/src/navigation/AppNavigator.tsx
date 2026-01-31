@@ -27,7 +27,7 @@ import { ConversationsScreen } from '../screens/ConversationsScreen';
 import { SavedHackathonsScreen, NotificationsScreen, SettingsScreen, HelpSupportScreen } from '../screens/ProfileScreens';
 import { FollowersScreen, FollowingScreen } from '../screens/FollowScreens';
 import { TeamDetailScreen } from '../screens/TeamDetailScreen';
-import { HackathonDetailScreen } from '../screens/PlaceholderScreens';
+import { HackathonDetailScreen } from '../screens/HackathonDetailScreen';
 
 // New feature screens
 import {
