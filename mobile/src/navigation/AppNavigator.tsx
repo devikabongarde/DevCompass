@@ -30,8 +30,19 @@ import { TeamDetailScreen } from '../screens/TeamDetailScreen';
 import { HackathonDetailScreen } from '../screens/HackathonDetailScreen';
 
 // New feature screens
+import { TeamChannelsScreen } from '../screens/TeamChannelsScreen';
+import { HackathonMapScreen } from '../screens/HackathonMapScreen';
+import { YourHacksScreen } from '../screens/YourHacksScreen';
+import { HistoricalIntelligenceScreen } from '../screens/HistoricalIntelligenceScreen';
+
+// Individual drawer screens
+import { RoleMatcherScreen } from '../screens/RoleMatcherScreen';
+import { TaskBoardScreen } from '../screens/TaskBoardScreen';
+import { ProjectCopilotScreen } from '../screens/ProjectCopilotScreen';
+import { CommunitiesScreen } from '../screens/CommunitiesScreen';
+
+// Batch 1 drawer screens
 import {
-  RoleMatcherScreen,
   HackathonRecommendationsScreen,
   SynergyScoreScreen,
   GitHubImportScreen,
@@ -40,20 +51,18 @@ import {
   ContentLanesScreen,
   ProjectDemosScreen,
   FeedControlsScreen,
-  TeamChannelsScreen,
-  TaskBoardScreen,
+} from '../screens/DrawerScreensBatch1';
+
+// Batch 2 drawer screens
+import {
   MentorHubScreen,
   TimelineViewScreen,
   SmartRemindersScreen,
   DevpostGeneratorScreen,
-  HackathonMapScreen,
-  CommunitiesScreen,
   ReputationBadgesScreen,
-  ProjectCopilotScreen,
   PersonalityMatcherScreen,
   RetroAnalyticsScreen,
-} from '../screens/PlaceholderScreens';
-import HistoricalIntelligenceScreen from '../screens/HistoricalIntelligenceScreen';
+} from '../screens/DrawerScreensBatch2';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -369,6 +378,9 @@ export const AppNavigator: React.FC = () => {
               <Stack.Screen name="Followers" component={FollowersScreen} />
               <Stack.Screen name="Following" component={FollowingScreen} />
               <Stack.Screen name="TeamDetail" component={TeamDetailScreen} />
+              <Stack.Screen name="YourHacks" component={YourHacksScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="TeamChannels" component={TeamChannelsScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="HackathonMap" component={HackathonMapScreen} options={{ headerShown: false }} />
             </>
           ) : (
             <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />

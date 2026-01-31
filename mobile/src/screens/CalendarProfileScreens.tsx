@@ -10,16 +10,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useAuthStore, useSavedStore, useThemeStore } from '../stores';
+import { useAuthStore, useSavedStore, useThemeStore, useFeedStore } from '../stores';
 import { theme } from '../theme';
 
 export const CalendarScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
   const navigation = useNavigation();
   const { savedHackathons } = useSavedStore();
+  const { hackathons: feedHackathons } = useFeedStore(); // Get hackathons from feed
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  // Combine saved and feed hackathons
+  const allHackathons = [...savedHackathons, ...feedHackathons];
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -139,7 +143,7 @@ export const CalendarScreen: React.FC = () => {
   };
 
   const getHackathonsForDate = (day: number) => {
-    return savedHackathons.filter(hackathon => {
+    return allHackathons.filter(hackathon => {
       const hackathonDates = getHackathonDates(hackathon);
       return hackathonDates.some(date =>
         date.year === selectedYear &&

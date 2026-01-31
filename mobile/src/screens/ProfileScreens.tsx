@@ -124,65 +124,218 @@ export const SavedHackathonsScreen: React.FC = () => {
 
 // --- Notifications Screen ---
 export const NotificationsScreen: React.FC = () => {
-  const [notifications, setNotifications] = useState({
-    deadlineReminders: true,
-    newHackathons: true,
-    prizeUpdates: false,
-    weeklyDigest: true,
-  });
+  const navigation = useNavigation();
+  const [activeTab, setActiveTab] = useState<'invites' | 'updates'>('invites');
+  const [invites, setInvites] = useState<any[]>([]);
+  const [allUpdates, setAllUpdates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const toggleNotification = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  React.useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      // Lazy load services
+      const { teammatesService, savedHackathonService, supabase } = await import('../services/supabase');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+
+      if (userId) {
+        // Fetch Invites
+        const invitesData = await teammatesService.getInvites();
+        setInvites(invitesData.filter((i: any) => i.status === 'pending'));
+
+        // Fetch Saved (Upcoming)
+        const savedData = await savedHackathonService.getSavedHackathons(userId);
+
+        // Fetch Teams (Participation)
+        const teamsData = await teammatesService.getUserTeams();
+
+        // Combine into updates
+        const updates = [
+          ...teamsData.map((t: any) => ({
+            type: 'participation',
+            id: t.id,
+            date: t.created_at,
+            title: `Joined Team: ${t.name}`,
+            desc: `You are participating in ${t.hackathon?.title}`,
+            icon: 'people',
+            color: '#4CAF50'
+          })),
+          ...savedData.map((s: any) => ({
+            type: 'saved',
+            id: s.id,
+            date: s.created_at,
+            title: 'Saved Hackathon',
+            desc: `Don't forget to register for ${s.hackathon?.title}`,
+            icon: 'bookmark',
+            color: '#F5A623'
+          }))
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        setAllUpdates(updates);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const NotificationToggle = ({ label, desc, value, onToggle }: any) => (
-    <View style={styles.settingRow}>
-      <View style={styles.settingTextContainer}>
-        <Text style={styles.settingLabel}>{label}</Text>
-        <Text style={styles.settingDesc}>{desc}</Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: '#333', true: 'rgba(245, 166, 35, 0.5)' }}
-        thumbColor={value ? '#F5A623' : '#666'}
-      />
-    </View>
-  );
+  const handleInviteResponse = async (inviteId: string, status: 'accepted' | 'rejected') => {
+    setActionLoading(inviteId);
+    try {
+      const { teammatesService } = await import('../services/supabase');
+      await teammatesService.respondToInvite(inviteId, status);
+
+      // Remove from list locally
+      setInvites(prev => prev.filter(i => i.id !== inviteId));
+
+      // Refresh if accepted to show new team
+      if (status === 'accepted') loadData();
+
+      Alert.alert(status === 'accepted' ? 'Team Joined!' : 'Invite Declined');
+    } catch (error) {
+      console.error('Error responding to invite:', error);
+      Alert.alert('Error', 'Failed to update invite status');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Header title="Notifications" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <PremiumSection title="Alerts">
-          <NotificationToggle
-            label="Deadline Reminders"
-            desc="24h before registration closes"
-            value={notifications.deadlineReminders}
-            onToggle={() => toggleNotification('deadlineReminders')}
-          />
-          <NotificationToggle
-            label="New Hackathons"
-            desc="Immediate alerts for new drops"
-            value={notifications.newHackathons}
-            onToggle={() => toggleNotification('newHackathons')}
-          />
-          <NotificationToggle
-            label="Prize Updates"
-            desc="Notify when prize pool increases"
-            value={notifications.prizeUpdates}
-            onToggle={() => toggleNotification('prizeUpdates')}
-          />
-        </PremiumSection>
 
-        <PremiumSection title="Digest">
-          <NotificationToggle
-            label="Weekly Report"
-            desc="Summary of top hackathons"
-            value={notifications.weeklyDigest}
-            onToggle={() => toggleNotification('weeklyDigest')}
-          />
-        </PremiumSection>
+      {/* Custom Tabs */}
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16 }}>
+        {['invites', 'updates'].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => setActiveTab(tab as any)}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              alignItems: 'center',
+              borderBottomWidth: 2,
+              borderBottomColor: activeTab === tab ? '#F5A623' : 'transparent',
+            }}
+          >
+            <Text style={{
+              color: activeTab === tab ? '#F5A623' : '#666',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              fontSize: 12,
+              letterSpacing: 1
+            }}>
+              {tab} {tab === 'invites' && invites.length > 0 && `(${invites.length})`}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <React.Fragment>
+            {/* Native RefreshControl not imported, simulating via manual reload logic if needed or just re-render */}
+          </React.Fragment>
+        }
+      >
+        {loading && <View style={{ padding: 20 }}><Text style={{ color: '#666', textAlign: 'center' }}>Loading...</Text></View>}
+
+        {!loading && activeTab === 'invites' && (
+          invites.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="mail-open-outline" size={48} color="#666" />
+              </View>
+              <Text style={styles.emptyTitle}>No Pending Invites</Text>
+              <Text style={styles.emptyText}>Team invites from other users will appear here.</Text>
+            </View>
+          ) : (
+            invites.map((invite) => (
+              <View key={invite.id} style={styles.hackathonCard}>
+                <View style={{ flexDirection: 'row', padding: 16, alignItems: 'center' }}>
+                  <View style={[styles.supportIconContainer, { backgroundColor: '#F5A623' }]}>
+                    <Text style={{ fontWeight: 'bold', color: '#000', fontSize: 18 }}>
+                      {invite.from_profile?.full_name?.charAt(0) || '?'}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[styles.hackathonTitle, { fontSize: 16, marginBottom: 4 }]}>
+                      {invite.from_profile?.full_name || 'Someone'}
+                    </Text>
+                    <Text style={{ color: '#CCC', fontSize: 13 }}>
+                      invited you to join their team for <Text style={{ fontWeight: 'bold', color: '#F5A623' }}>{invite.hackathon?.title}</Text>
+                    </Text>
+                    {invite.message && (
+                      <View style={{ marginTop: 8, padding: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
+                        <Text style={{ color: '#AAA', fontStyle: 'italic', fontSize: 12 }}>"{invite.message}"</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#222' }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, padding: 12, alignItems: 'center' }}
+                    onPress={() => handleInviteResponse(invite.id, 'rejected')}
+                    disabled={!!actionLoading}
+                  >
+                    <Text style={{ color: '#EF4444', fontWeight: 'bold' }}>Decline</Text>
+                  </TouchableOpacity>
+                  <View style={{ width: 1, backgroundColor: '#222' }} />
+                  <TouchableOpacity
+                    style={{ flex: 1, padding: 12, alignItems: 'center', backgroundColor: 'rgba(245, 166, 35, 0.1)' }}
+                    onPress={() => handleInviteResponse(invite.id, 'accepted')}
+                    disabled={!!actionLoading}
+                  >
+                    {actionLoading === invite.id ? (
+                      <Text style={{ color: '#F5A623' }}>Processing...</Text>
+                    ) : (
+                      <Text style={{ color: '#F5A623', fontWeight: 'bold' }}>Accept & Join</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
+          )
+        )}
+
+        {!loading && activeTab === 'updates' && (
+          allUpdates.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="notifications-off-outline" size={48} color="#666" />
+              <Text style={[styles.emptyTitle, { marginTop: 16 }]}>All Caught Up</Text>
+            </View>
+          ) : (
+            allUpdates.map((item) => (
+              <TouchableOpacity
+                key={item.id + item.type}
+                style={[styles.sectionContainer, { marginTop: 0, marginBottom: 12, borderWidth: 0, backgroundColor: '#151515' }]}
+              >
+                <View style={{ flexDirection: 'row', padding: 16, alignItems: 'center' }}>
+                  <View style={{
+                    width: 40, height: 40, borderRadius: 20,
+                    backgroundColor: `${item.color}20`, alignItems: 'center', justifyContent: 'center',
+                    marginRight: 12
+                  }}>
+                    <Ionicons name={item.icon as any} size={20} color={item.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15, marginBottom: 2 }}>{item.title}</Text>
+                    <Text style={{ color: '#999', fontSize: 13 }}>{item.desc}</Text>
+                    <Text style={{ color: '#555', fontSize: 11, marginTop: 4 }}>
+                      {new Date(item.date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          )
+        )}
       </ScrollView>
     </View>
   );

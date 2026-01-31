@@ -382,7 +382,7 @@ export const UserProfileScreen: React.FC = () => {
 
       <TouchableOpacity
         style={styles.chatFab}
-        onPress={() => navigation.navigate('ChatScreen' as never, { receiverId: userId } as never)}
+        onPress={() => navigation.navigate('ChatScreen' as never, { userId: userId } as never)}
       >
         <LinearGradient
           colors={['#FFD700', '#F5A623']}

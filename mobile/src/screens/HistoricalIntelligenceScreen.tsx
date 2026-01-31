@@ -390,4 +390,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HistoricalIntelligenceScreen;
+export { HistoricalIntelligenceScreen };
