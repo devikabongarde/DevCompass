@@ -155,7 +155,7 @@ export const useFeedStore = create<FeedStore>((set, get) => ({
       const { hackathonService } = await import('../services/supabase');
       const response = await hackathonService.getHackathons(
         refresh ? 0 : page,
-        10,
+        50,
         filters
       );
 

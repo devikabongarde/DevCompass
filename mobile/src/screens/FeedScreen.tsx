@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -118,7 +118,7 @@ export const FeedScreen: React.FC = () => {
     }
   };
 
-  const renderHackathon = ({ item }: { item: Hackathon }) => {
+  const renderHackathon = useCallback(({ item }: { item: Hackathon }) => {
     const panResponder = PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => {
         return Math.abs(gestureState.dx) > 20;
@@ -144,7 +144,7 @@ export const FeedScreen: React.FC = () => {
         />
       </View>
     );
-  };
+  }, []);
 
   const renderEmpty = () => {
     if (loading && hackathons.length === 0) {
@@ -239,9 +239,10 @@ export const FeedScreen: React.FC = () => {
         }
         ListEmptyComponent={renderEmpty}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={3}
-        windowSize={5}
-        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        initialNumToRender={1}
+        scrollEventThrottle={16}
         getItemLayout={(data, index) => ({
           length: CARD_HEIGHT,
           offset: CARD_HEIGHT * index + TOP_BAR_OFFSET,
