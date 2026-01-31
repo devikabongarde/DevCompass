@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Linking, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import { theme } from '../theme';
 import { Hackathon } from '../types';
 import { useThemeStore } from '../stores';
 import { messageService, profileService } from '../services/supabase';
+import { useHistoricalIntelligence } from '../hooks/useHistoricalIntelligence';
 
 const cleanHtmlTags = (text: string): string => {
     return text
@@ -26,6 +27,14 @@ export const HackathonDetailScreen: React.FC = () => {
     const { isDarkMode = false } = useThemeStore();
     const [shareModalVisible, setShareModalVisible] = useState(false);
     const [searchResults, setSearchResults] = useState<any[]>([]);
+    const { data: intelligenceData, loading: intelligenceLoading, fetchIntelligence } = useHistoricalIntelligence(hackathon);
+
+    useEffect(() => {
+        // Fetch intelligence data on mount for Devpost hackathons
+        if (hackathon.platform_source === 'devpost') {
+            fetchIntelligence();
+        }
+    }, [hackathon.id]);
 
     const handleRegister = () => {
         if (hackathon.original_url) {
@@ -280,6 +289,231 @@ export const HackathonDetailScreen: React.FC = () => {
                             </View>
                         )}
                     </View>
+
+                    {/* Historical Intelligence Section */}
+                    {hackathon.platform_source === 'devpost' && intelligenceData && !intelligenceLoading && (
+                        <View style={{
+                            backgroundColor: theme.colors.surface,
+                            borderRadius: 12,
+                            padding: 16,
+                            marginBottom: 16,
+                            borderWidth: 1,
+                            borderColor: theme.colors.borderLight,
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                <Text style={{
+                                    fontSize: 16,
+                                    fontWeight: '700',
+                                    color: theme.colors.primary,
+                                    flex: 1,
+                                }}>
+                                    🔬 Winning Strategy
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => fetchIntelligence()}
+                                    style={{ padding: 4 }}
+                                >
+                                    <Ionicons
+                                        name="refresh"
+                                        size={20}
+                                        color={theme.colors.primary}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Top Technologies */}
+                            {intelligenceData.topTechs && intelligenceData.topTechs.length > 0 && (
+                                <View style={{ marginBottom: 16 }}>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        fontWeight: '600',
+                                        color: theme.colors.textLight,
+                                        marginBottom: 8,
+                                    }}>
+                                        Top Technologies in Winners
+                                    </Text>
+                                    {intelligenceData.topTechs.slice(0, 3).map((tech, index) => (
+                                        <View key={index} style={{ marginBottom: 8 }}>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                                                <Text style={{
+                                                    fontSize: 12,
+                                                    color: theme.colors.text,
+                                                    fontWeight: '500',
+                                                }}>
+                                                    {tech.technology}
+                                                </Text>
+                                                <Text style={{
+                                                    fontSize: 12,
+                                                    fontWeight: '700',
+                                                    color: theme.colors.primary,
+                                                }}>
+                                                    {tech.percentage.toFixed(1)}%
+                                                </Text>
+                                            </View>
+                                            <View style={{
+                                                height: 4,
+                                                backgroundColor: theme.colors.borderLight,
+                                                borderRadius: 2,
+                                                overflow: 'hidden',
+                                            }}>
+                                                <LinearGradient
+                                                    colors={['rgba(245, 166, 35, 0.8)', 'rgba(224, 146, 0, 0.6)']}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 0 }}
+                                                    style={{
+                                                        height: '100%',
+                                                        width: `${tech.percentage}%`,
+                                                    }}
+                                                />
+                                            </View>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* Top Themes */}
+                            {intelligenceData.topThemes && intelligenceData.topThemes.length > 0 && (
+                                <View style={{ marginBottom: 16 }}>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        fontWeight: '600',
+                                        color: theme.colors.textLight,
+                                        marginBottom: 8,
+                                    }}>
+                                        Winning Themes
+                                    </Text>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                        {intelligenceData.topThemes.slice(0, 2).map((themeItem, index) => (
+                                            <LinearGradient
+                                                key={index}
+                                                colors={['rgba(245, 166, 35, 0.15)', 'rgba(224, 146, 0, 0.08)']}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 1 }}
+                                                style={{
+                                                    paddingHorizontal: 10,
+                                                    paddingVertical: 6,
+                                                    borderRadius: 6,
+                                                    marginRight: 8,
+                                                    marginBottom: 8,
+                                                    borderWidth: 1,
+                                                    borderColor: theme.colors.borderGold,
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    color: theme.colors.primary,
+                                                    fontSize: 11,
+                                                    fontWeight: '600',
+                                                }}>
+                                                    {themeItem.theme} • {themeItem.percentage.toFixed(0)}%
+                                                </Text>
+                                            </LinearGradient>
+                                        ))}
+                                    </View>
+                                </View>
+                            )}
+
+                            {/* Key Insights */}
+                            {intelligenceData.insights && intelligenceData.insights.length > 0 && (
+                                <View style={{ marginBottom: 12 }}>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        fontWeight: '600',
+                                        color: theme.colors.textLight,
+                                        marginBottom: 8,
+                                    }}>
+                                        Key Insights
+                                    </Text>
+                                    {intelligenceData.insights.slice(0, 3).map((insight, index) => (
+                                        <View key={index} style={{ flexDirection: 'row', marginBottom: 6 }}>
+                                            <Text style={{
+                                                color: theme.colors.primary,
+                                                marginRight: 8,
+                                                fontSize: 12,
+                                            }}>
+                                                •
+                                            </Text>
+                                            <Text style={{
+                                                fontSize: 12,
+                                                color: theme.colors.textSecondary,
+                                                flex: 1,
+                                                lineHeight: 16,
+                                            }}>
+                                                {insight}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* Analysis Stats */}
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-around',
+                                paddingTop: 12,
+                                borderTopWidth: 1,
+                                borderTopColor: theme.colors.borderLight,
+                            }}>
+                                <View style={{ alignItems: 'center' }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: '700',
+                                        color: theme.colors.primary,
+                                    }}>
+                                        {intelligenceData.pastEditions}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 11,
+                                        color: theme.colors.textLight,
+                                        marginTop: 2,
+                                    }}>
+                                        Past Editions
+                                    </Text>
+                                </View>
+                                <View style={{ alignItems: 'center' }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: '700',
+                                        color: theme.colors.primary,
+                                    }}>
+                                        {intelligenceData.winnersAnalyzed}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 11,
+                                        color: theme.colors.textLight,
+                                        marginTop: 2,
+                                    }}>
+                                        Winners Analyzed
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Loading State */}
+                    {hackathon.platform_source === 'devpost' && intelligenceLoading && (
+                        <View style={{
+                            backgroundColor: theme.colors.surface,
+                            borderRadius: 12,
+                            padding: 16,
+                            marginBottom: 16,
+                            borderWidth: 1,
+                            borderColor: theme.colors.borderLight,
+                            alignItems: 'center',
+                        }}>
+                            <Ionicons
+                                name="hourglass-outline"
+                                size={24}
+                                color={theme.colors.primary}
+                            />
+                            <Text style={{
+                                marginTop: 8,
+                                color: theme.colors.textLight,
+                                fontSize: 12,
+                            }}>
+                                Analyzing winning patterns...
+                            </Text>
+                        </View>
+                    )}
 
                     {/* Themes */}
                     {hackathon.themes && hackathon.themes.length > 0 && (
