@@ -102,7 +102,7 @@ const CustomDrawerContent = (props: any) => {
         { name: 'Unified Timeline', screen: 'TimelineView', icon: 'time' },
         { name: 'Smart Reminders', screen: 'SmartReminders', icon: 'notifications' },
         { name: 'Devpost Generator', screen: 'DevpostGenerator', icon: 'document-text' },
-        { name: 'Historical Intelligence', screen: 'HistoricalIntelligence', icon: 'brain' },
+        { name: 'Historical Intelligence', screen: 'HistoricalIntelligence', icon: 'analytics' },
       ],
     },
     {
