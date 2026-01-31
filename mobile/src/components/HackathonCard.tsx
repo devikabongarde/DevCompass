@@ -24,6 +24,8 @@ interface HackathonCardProps {
   onPress: () => void;
   onSave?: () => void;
   onShare?: (hackathon: Hackathon) => void;
+  skillMatchPercentage?: number;
+  matchedSkills?: string[];
 }
 
 export const HackathonCard: React.FC<HackathonCardProps> = ({
@@ -31,6 +33,8 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
   onPress,
   onSave,
   onShare,
+  skillMatchPercentage = 0,
+  matchedSkills = [],
 }) => {
   const { isSaved, saveHackathon, unsaveHackathon } = useSavedStore();
   const { isDarkMode = false } = useThemeStore();
@@ -211,9 +215,53 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
       <View style={styles.floatingGlassCard}>
         {/* Content */}
         <View style={styles.contentInner}>
-          <Text style={[styles.title, { color: '#FFFFFF' }]} numberOfLines={2}>
-            {hackathon.title}
-          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Text style={[styles.title, { color: '#FFFFFF', flex: 1 }]} numberOfLines={2}>
+              {hackathon.title}
+            </Text>
+            {skillMatchPercentage > 0 && (
+              <View style={{
+                backgroundColor: skillMatchPercentage >= 60 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 166, 35, 0.2)',
+                borderColor: skillMatchPercentage >= 60 ? '#22C55E' : '#F5A623',
+                borderWidth: 1,
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                marginLeft: 8,
+              }}>
+                <Text style={{
+                  color: skillMatchPercentage >= 60 ? '#22C55E' : '#F5A623',
+                  fontSize: 11,
+                  fontWeight: '700',
+                }}>
+                  {skillMatchPercentage}% match
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {matchedSkills.length > 0 && (
+            <View style={{ marginTop: 6, marginBottom: 8 }}>
+              <Text style={{ color: '#94A3B8', fontSize: 10, marginBottom: 4 }}>Your skills:</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                {matchedSkills.map((skill, idx) => (
+                  <View
+                    key={idx}
+                    style={{
+                      backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                      borderColor: '#22C55E',
+                      borderWidth: 0.5,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <Text style={{ color: '#22C55E', fontSize: 9, fontWeight: '600' }}>✓ {skill}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           <Text style={[styles.summary, { color: '#E2E8F0' }]} numberOfLines={2}>
             {hackathon.short_summary || hackathon.description}

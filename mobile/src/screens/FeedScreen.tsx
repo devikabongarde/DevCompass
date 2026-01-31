@@ -17,11 +17,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { useFeedStore, useSavedStore, useThemeStore, useTeammatesStore } from '../stores';
+import { useFeedStore, useSavedStore, useThemeStore, useTeammatesStore, useAuthStore } from '../stores';
 import { theme } from '../theme';
 import { Hackathon } from '../types';
 import { HackathonCard } from '../components/HackathonCard';
 import { messageService, profileService } from '../services/supabase';
+import { useSkillBasedRecommendation } from '../hooks/useSkillBasedRecommendation';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 const TOP_BAR_OFFSET = 110;
@@ -31,6 +32,7 @@ const CARD_HEIGHT = screenHeight - TOP_BAR_OFFSET - BOTTOM_OFFSET;
 export const FeedScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
   const navigation = useNavigation();
+  const { profile } = useAuthStore();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -50,6 +52,9 @@ export const FeedScreen: React.FC = () => {
     filters,
     setFilters
   } = useFeedStore();
+
+  // Get skill-based recommendations
+  const { recommendations } = useSkillBasedRecommendation(profile?.skills || [], hackathons);
 
   const THEMES = ["AI", "Blockchain", "Web", "Mobile", "Data Science", "Cybersecurity", "IoT", "Cloud", "Fintech", "Healthtech"];
   const LOCATIONS = ["online", "offline", "hybrid"];
@@ -154,6 +159,8 @@ export const FeedScreen: React.FC = () => {
       },
     });
 
+    const recommendation = recommendations[item.id];
+
     return (
       <View {...panResponder.panHandlers} style={{ height: CARD_HEIGHT, justifyContent: 'center' }}>
         <HackathonCard
@@ -161,10 +168,12 @@ export const FeedScreen: React.FC = () => {
           onSave={() => handleSave(item)}
           onPress={() => handleHackathonPress(item)}
           onShare={handleShare}
+          skillMatchPercentage={recommendation?.matchPercentage || 0}
+          matchedSkills={recommendation?.matchedSkills || []}
         />
       </View>
     );
-  }, []);
+  }, [recommendations]);
 
   const renderEmpty = () => {
     if (loading && hackathons.length === 0) {
