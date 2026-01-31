@@ -11,7 +11,7 @@ export interface Hackathon {
   end_date?: string;
   registration_deadline?: string;
   themes: string[];
-  platform_source: 'unstop' | 'devpost';
+  platform_source: 'unstop' | 'devpost' | 'devfolio' | 'hackclub';
   original_url: string;
   eligibility?: string;
   location_mode?: 'online' | 'offline' | 'hybrid';
@@ -172,8 +172,9 @@ export interface PaginatedResponse<T> {
 
 // Filter types
 export interface FeedFilters {
-  themes: string[];
-  platforms: ('unstop' | 'devpost')[];
+  themes?: string[];
+  platforms?: ('unstop' | 'devpost' | 'devfolio' | 'hackclub')[];
+  locationMode?: ('online' | 'offline' | 'hybrid')[];
   prizeRange?: {
     min?: number;
     max?: number;

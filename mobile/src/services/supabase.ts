@@ -21,6 +21,10 @@ export const hackathonService = {
       query = query.in('platform_source', filters.platforms);
     }
 
+    if (filters?.locationMode?.length) {
+      query = query.in('location_mode', filters.locationMode);
+    }
+
     const { data, error, count } = await query;
     
     if (error) throw error;
@@ -35,18 +39,21 @@ export const hackathonService = {
     const unstopHackathons = activeHackathons.filter(h => h.platform_source === 'unstop');
     const devpostHackathons = activeHackathons.filter(h => h.platform_source === 'devpost');
     const devfolioHackathons = activeHackathons.filter(h => h.platform_source === 'devfolio');
+    const hackclubHackathons = activeHackathons.filter(h => h.platform_source === 'hackclub');
     
     const shuffledUnstop = unstopHackathons.sort(() => Math.random() - 0.5);
     const shuffledDevpost = devpostHackathons.sort(() => Math.random() - 0.5);
     const shuffledDevfolio = devfolioHackathons.sort(() => Math.random() - 0.5);
+    const shuffledHackclub = hackclubHackathons.sort(() => Math.random() - 0.5);
     
     const mixedHackathons = [];
     let unstopIndex = 0;
     let devpostIndex = 0;
     let devfolioIndex = 0;
+    let hackclubIndex = 0;
     
-    while (unstopIndex < shuffledUnstop.length || devpostIndex < shuffledDevpost.length || devfolioIndex < shuffledDevfolio.length) {
-      const choice = Math.floor(Math.random() * 3);
+    while (unstopIndex < shuffledUnstop.length || devpostIndex < shuffledDevpost.length || devfolioIndex < shuffledDevfolio.length || hackclubIndex < shuffledHackclub.length) {
+      const choice = Math.floor(Math.random() * 4);
       
       if (choice === 0 && unstopIndex < shuffledUnstop.length) {
         mixedHackathons.push(shuffledUnstop[unstopIndex++]);
@@ -54,12 +61,16 @@ export const hackathonService = {
         mixedHackathons.push(shuffledDevpost[devpostIndex++]);
       } else if (choice === 2 && devfolioIndex < shuffledDevfolio.length) {
         mixedHackathons.push(shuffledDevfolio[devfolioIndex++]);
+      } else if (choice === 3 && hackclubIndex < shuffledHackclub.length) {
+        mixedHackathons.push(shuffledHackclub[hackclubIndex++]);
       } else if (unstopIndex < shuffledUnstop.length) {
         mixedHackathons.push(shuffledUnstop[unstopIndex++]);
       } else if (devpostIndex < shuffledDevpost.length) {
         mixedHackathons.push(shuffledDevpost[devpostIndex++]);
       } else if (devfolioIndex < shuffledDevfolio.length) {
         mixedHackathons.push(shuffledDevfolio[devfolioIndex++]);
+      } else if (hackclubIndex < shuffledHackclub.length) {
+        mixedHackathons.push(shuffledHackclub[hackclubIndex++]);
       }
     }
     

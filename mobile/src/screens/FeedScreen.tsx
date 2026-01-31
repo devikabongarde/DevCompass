@@ -53,8 +53,9 @@ export const FeedScreen: React.FC = () => {
 
   const THEMES = ["AI", "Blockchain", "Web", "Mobile", "Data Science", "Cybersecurity", "IoT", "Cloud", "Fintech", "Healthtech"];
   const LOCATIONS = ["online", "offline", "hybrid"];
+  const PLATFORMS = ["unstop", "devpost", "devfolio", "hackclub"];
 
-  const toggleFilter = (type: 'themes' | 'locationMode', value: string) => {
+  const toggleFilter = (type: 'themes' | 'locationMode' | 'platforms', value: string) => {
     const currentFilters = filters[type] || [];
     const newFilters = currentFilters.includes(value as any)
       ? currentFilters.filter(item => item !== value)
@@ -63,7 +64,7 @@ export const FeedScreen: React.FC = () => {
     setFilters({ [type]: newFilters });
   };
 
-  const activeFiltersCount = (filters.themes?.length || 0) + (filters.locationMode?.length || 0);
+  const activeFiltersCount = (filters.themes?.length || 0) + (filters.locationMode?.length || 0) + (filters.platforms?.length || 0);
 
   const { saveHackathon, unsaveHackathon, isSaved } = useSavedStore();
   const { checkTeammateStatus, isLookingFor } = useTeammatesStore();
@@ -373,6 +374,25 @@ export const FeedScreen: React.FC = () => {
                     styles.filterChipText,
                     filters.themes?.includes(themeItem) && styles.activeFilterChipText
                   ]}>{themeItem}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.filterSectionTitle, { color: isDarkMode ? '#cbd5e1' : '#475569', marginTop: 16 }]}>Platforms</Text>
+            <View style={styles.filterOptions}>
+              {PLATFORMS.map(platform => (
+                <TouchableOpacity
+                  key={platform}
+                  style={[
+                    styles.filterChip,
+                    filters.platforms?.includes(platform as any) && styles.activeFilterChip
+                  ]}
+                  onPress={() => toggleFilter('platforms', platform)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    filters.platforms?.includes(platform as any) && styles.activeFilterChipText
+                  ]}>{platform.charAt(0).toUpperCase() + platform.slice(1)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
