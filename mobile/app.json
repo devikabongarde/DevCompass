@@ -33,6 +33,9 @@
         "projectId": "your-project-id"
       }
     },
+    "runtimeVersion": {
+      "policy": "nativeVersion"
+    },
     "plugins": []
   }
 }
