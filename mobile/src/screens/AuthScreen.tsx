@@ -23,7 +23,7 @@ export const AuthScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const { signIn, signUp, loading, error, setError } = useAuthStore();
 
   const handleSubmit = async () => {
@@ -61,37 +61,40 @@ export const AuthScreen: React.FC = () => {
 
   return (
     <LinearGradient
-      colors={['#6366f1', '#8b5cf6']}
+      colors={['#0A0A0A', '#1A1A1A', '#0A0A0A']}
       style={styles.container}
     >
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.content}>
-            {/* Header */}
+            {/* Premium Header with Glowing Logo */}
             <View style={styles.header}>
               <View style={styles.logoContainer}>
-                <Ionicons name="compass" size={48} color="white" />
+                <Ionicons name="compass" size={56} color="#F5A623" />
               </View>
-              <Text style={styles.title}>DevCompass</Text>
+              <Text style={styles.title}>
+                <Text style={{ color: '#F5A623' }}>Dev</Text>
+                <Text style={{ color: '#FFFFFF' }}>Compass</Text>
+              </Text>
               <Text style={styles.subtitle}>
                 {isSignUp ? 'Create your account' : 'Welcome back'}
               </Text>
             </View>
 
-            {/* Form */}
+            {/* Premium Form */}
             <View style={styles.form}>
               {isSignUp && (
                 <View style={styles.inputContainer}>
-                  <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.7)" />
+                  <Ionicons name="person-outline" size={20} color="#F5A623" />
                   <TextInput
                     style={styles.input}
                     placeholder="Full Name"
-                    placeholderTextColor="rgba(255,255,255,0.7)"
+                    placeholderTextColor="rgba(184, 184, 184, 0.6)"
                     value={fullName}
                     onChangeText={setFullName}
                     autoCapitalize="words"
@@ -101,11 +104,11 @@ export const AuthScreen: React.FC = () => {
               )}
 
               <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.7)" />
+                <Ionicons name="mail-outline" size={20} color="#F5A623" />
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
-                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  placeholderTextColor="rgba(184, 184, 184, 0.6)"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -115,11 +118,11 @@ export const AuthScreen: React.FC = () => {
               </View>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" />
+                <Ionicons name="lock-closed-outline" size={20} color="#F5A623" />
                 <TextInput
                   style={styles.input}
                   placeholder="Password"
-                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  placeholderTextColor="rgba(184, 184, 184, 0.6)"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -132,7 +135,7 @@ export const AuthScreen: React.FC = () => {
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
-                    color="rgba(255,255,255,0.7)"
+                    color="#F5A623"
                   />
                 </TouchableOpacity>
               </View>
@@ -144,13 +147,14 @@ export const AuthScreen: React.FC = () => {
                 </View>
               )}
 
+              {/* Glowing Gold Submit Button */}
               <TouchableOpacity
                 style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                 onPress={handleSubmit}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#6366f1" />
+                  <ActivityIndicator color="#0A0A0A" />
                 ) : (
                   <Text style={styles.submitButtonText}>
                     {isSignUp ? 'Create Account' : 'Sign In'}
@@ -197,23 +201,30 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(245, 166, 35, 0.15)',
+    borderWidth: 3,
+    borderColor: 'rgba(245, 166, 35, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
+    shadowColor: '#F5A623',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 10,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: 36,
+    fontWeight: '800',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: 'rgba(255,255,255,0.8)',
+    color: '#B8B8B8',
+    fontWeight: '500',
   },
   form: {
     marginBottom: 20,
@@ -221,19 +232,20 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    marginBottom: 20,
+    borderColor: 'rgba(245, 166, 35, 0.3)',
+    marginBottom: 16,
   },
   input: {
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    color: 'white',
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
   eyeButton: {
     padding: 4,
@@ -242,27 +254,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
-    marginBottom: 20,
+    marginBottom: 16,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   errorText: {
     fontSize: 14,
     color: '#EF4444',
     marginLeft: 8,
+    fontWeight: '600',
   },
   submitButton: {
-    backgroundColor: 'white',
+    backgroundColor: '#F5A623',
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: 18,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: '#F5A623',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: '#FFD700',
   },
   submitButtonDisabled: {
     opacity: 0.6,
   },
   submitButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#6366f1',
+    fontWeight: '800',
+    color: '#0A0A0A',
   },
   footer: {
     flexDirection: 'row',
@@ -272,12 +297,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
+    color: '#B8B8B8',
     marginRight: 8,
   },
   footerLink: {
     fontSize: 16,
-    color: 'white',
-    fontWeight: 'bold',
+    color: '#F5A623',
+    fontWeight: '800',
   },
 });

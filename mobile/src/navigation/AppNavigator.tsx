@@ -123,35 +123,42 @@ const CustomDrawerContent = (props: any) => {
 
   return (
     <ScrollView
-      style={[styles.drawerContainer, { backgroundColor: isDarkMode ? '#1e293b' : '#fff' }]}
+      style={[styles.drawerContainer, { backgroundColor: '#0A0A0A' }]}
       contentContainerStyle={styles.drawerContent}
     >
-      {/* Header */}
-      <View style={[styles.drawerHeader, { backgroundColor: isDarkMode ? '#334155' : theme.colors.primary }]}>
-        <Text style={styles.drawerHeaderText}>DevCompass</Text>
-        <Text style={styles.drawerHeaderSubtext}>Pro Features</Text>
+      {/* Premium Header with Gold Gradient */}
+      <View style={[styles.drawerHeader, { backgroundColor: '#1A1A1A' }]}>
+        <Text style={styles.drawerHeaderText}>
+          <Text style={{ color: '#F5A623' }}>Dev</Text>
+          <Text style={{ color: '#FFFFFF' }}>Compass</Text>
+        </Text>
+        <View style={styles.goldLine} />
+        <Text style={styles.drawerHeaderSubtext}>Premium Features</Text>
       </View>
 
       {/* Menu Sections */}
       {menuSections.map((section, sectionIndex) => (
         <View key={sectionIndex} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#94a3b8' : '#64748b' }]}>
+          <Text style={[styles.sectionTitle, { color: '#F5A623' }]}>
             {section.title}
           </Text>
           {section.items.map((item, itemIndex) => (
             <TouchableOpacity
               key={itemIndex}
-              style={[styles.menuItem, { backgroundColor: isDarkMode ? '#1e293b' : '#fff' }]}
+              style={[styles.menuItem, { backgroundColor: '#1A1A1A', borderColor: 'rgba(245, 166, 35, 0.1)' }]}
               onPress={() => props.navigation.navigate(item.screen)}
             >
-              <Ionicons
-                name={item.icon as any}
-                size={20}
-                color={isDarkMode ? '#94a3b8' : theme.colors.primary}
-              />
-              <Text style={[styles.menuItemText, { color: isDarkMode ? '#f1f5f9' : theme.colors.text }]}>
+              <View style={styles.menuItemIconContainer}>
+                <Ionicons
+                  name={item.icon as any}
+                  size={20}
+                  color="#F5A623"
+                />
+              </View>
+              <Text style={[styles.menuItemText, { color: '#FFFFFF' }]}>
                 {item.name}
               </Text>
+              <Ionicons name="chevron-forward" size={16} color="#808080" />
             </TouchableOpacity>
           ))}
         </View>
@@ -163,8 +170,8 @@ const CustomDrawerContent = (props: any) => {
           style={styles.closeButton}
           onPress={() => props.navigation.closeDrawer()}
         >
-          <Ionicons name="close-circle" size={24} color={theme.colors.textLight} />
-          <Text style={[styles.closeButtonText, { color: isDarkMode ? '#94a3b8' : theme.colors.textLight }]}>
+          <Ionicons name="close-circle" size={24} color="#F5A623" />
+          <Text style={[styles.closeButtonText, { color: '#B8B8B8' }]}>
             Close Menu
           </Text>
         </TouchableOpacity>
@@ -181,35 +188,28 @@ const MainTabs: React.FC = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
+          let iconName: keyof typeof Ionicons.glyphMap = 'home';
 
-          switch (route.name) {
-            case 'Feed':
-              iconName = focused ? 'flame' : 'flame-outline';
-              break;
-            case 'Saved':
-              iconName = focused ? 'heart' : 'heart-outline';
-              break;
-            case 'Calendar':
-              iconName = focused ? 'calendar' : 'calendar-outline';
-              break;
-            case 'People':
-              iconName = focused ? 'people' : 'people-outline';
-              break;
-            case 'Profile':
-              iconName = focused ? 'person' : 'person-outline';
-              break;
-            default:
-              iconName = 'help-outline';
+          if (route.name === 'Feed') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Saved') {
+            iconName = focused ? 'bookmark' : 'bookmark-outline';
+          } else if (route.name === 'Calendar') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'People') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: isDarkMode ? '#64748b' : theme.colors.textLight,
+        tabBarActiveTintColor: '#F5A623', // Premium gold
+        tabBarInactiveTintColor: '#808080', // Gray
         tabBarStyle: {
-          backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface,
-          borderTopColor: isDarkMode ? '#334155' : 'transparent',
+          backgroundColor: '#0A0A0A', // Pure black
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(245, 166, 35, 0.2)', // Gold border
           paddingBottom: 8,
           paddingTop: 8,
           height: 70,
@@ -233,8 +233,9 @@ const MainTabs: React.FC = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
+            backgroundColor: 'rgba(10, 10, 10, 0.98)', // Dark with slight transparency
+            borderTopWidth: 1,
+            borderTopColor: 'rgba(245, 166, 35, 0.2)',
           }} />
         ),
       })}
@@ -398,14 +399,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   drawerHeaderText: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#fff',
+  },
+  goldLine: {
+    height: 2,
+    backgroundColor: '#F5A623',
+    marginVertical: 12,
+    width: 60,
   },
   drawerHeaderSubtext: {
-    fontSize: 14,
-    color: '#e2e8f0',
-    marginTop: 4,
+    fontSize: 13,
+    color: '#B8B8B8',
+    fontWeight: '600',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   section: {
     marginBottom: 20,
@@ -422,15 +430,25 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 4,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    marginBottom: 6,
+    borderWidth: 1,
+  },
+  menuItemIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(245, 166, 35, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menuItemText: {
     fontSize: 15,
     marginLeft: 12,
-    fontWeight: '500',
+    fontWeight: '600',
+    flex: 1,
   },
   drawerFooter: {
     marginTop: 20,

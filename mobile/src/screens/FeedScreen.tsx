@@ -179,24 +179,28 @@ export const FeedScreen: React.FC = () => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Top Bar */}
-      <View style={[styles.topBar, { backgroundColor: isDarkMode ? 'rgba(15,23,42,0.8)' : 'rgba(0,0,0,0.3)' }]}>
+      {/* Premium Top Bar with Gold Accents */}
+      <View style={[styles.topBar, { backgroundColor: isDarkMode ? 'rgba(10,10,10,0.95)' : 'rgba(0,0,0,0.9)' }]}>
         <View style={styles.topBarLeft}>
           <TouchableOpacity
-            style={styles.iconButton}
+            style={[styles.iconButton, styles.goldButton]}
             onPress={() => (navigation as any).openDrawer()}
           >
-            <Ionicons name="menu" size={28} color="white" />
+            <Ionicons name="menu" size={26} color="#F5A623" />
           </TouchableOpacity>
-          <Text style={styles.logo}>DevCompass</Text>
+          <Text style={styles.logo}>
+            <Text style={styles.logoGold}>Dev</Text>
+            <Text style={styles.logoWhite}>Compass</Text>
+          </Text>
         </View>
         <View style={styles.topBarRight}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="notifications-outline" size={24} color="white" />
+          <TouchableOpacity style={[styles.iconButton, styles.glassButton]}>
+            <Ionicons name="notifications-outline" size={24} color="#F5A623" />
+            <View style={styles.notificationBadge} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.profileButton}>
-            <View style={[styles.avatar, { backgroundColor: isDarkMode ? '#334155' : 'white' }]}>
-              <Ionicons name="person" size={20} color={isDarkMode ? 'white' : theme.colors.primary} />
+            <View style={[styles.avatar, { backgroundColor: '#F5A623', borderColor: '#FFD700', borderWidth: 2 }]}>
+              <Ionicons name="person" size={18} color="#0A0A0A" />
             </View>
           </TouchableOpacity>
         </View>
@@ -302,7 +306,7 @@ export const FeedScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000', // Keep feed background black for TikTok style
+    backgroundColor: '#0A0A0A', // Premium dark background
   },
   topBar: {
     position: 'absolute',
@@ -319,9 +323,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
   logo: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: 'white',
+  },
+  logoGold: {
+    color: '#F5A623',
+    fontWeight: '800',
+  },
+  logoWhite: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   topBarLeft: {
     flexDirection: 'row',
@@ -334,7 +345,28 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 12,
+  },
+  goldButton: {
+    backgroundColor: 'rgba(245, 166, 35, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 166, 35, 0.3)',
+  },
+  glassButton: {
+    backgroundColor: 'rgba(31, 31, 31, 0.6)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 166, 35, 0.2)',
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F5A623',
   },
   profileButton: {
     padding: 4,

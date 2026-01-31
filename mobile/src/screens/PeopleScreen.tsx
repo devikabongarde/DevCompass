@@ -22,7 +22,7 @@ export const PeopleScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { isDarkMode = false } = useThemeStore();
   const { user } = useAuthStore();
-  
+
   const [activeTab, setActiveTab] = useState<'search' | 'messages' | 'invites' | 'teams'>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
@@ -56,7 +56,7 @@ export const PeopleScreen: React.FC = () => {
       setSearchResults([]);
       return;
     }
-    
+
     setLoading(true);
     try {
       const results = await profileService.searchProfiles(query.trim());
@@ -89,7 +89,7 @@ export const PeopleScreen: React.FC = () => {
       await teammatesService.respondToInvite(inviteId, status);
       Alert.alert(
         status === 'accepted' ? 'Invite Accepted!' : 'Invite Declined',
-        status === 'accepted' 
+        status === 'accepted'
           ? 'You can now chat with your new teammate!'
           : 'The invite has been declined.'
       );
@@ -106,11 +106,11 @@ export const PeopleScreen: React.FC = () => {
 
   const containerStyle = {
     flex: 1,
-    backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC',
+    backgroundColor: '#0A0A0A',
   };
 
   const headerStyle = {
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    backgroundColor: '#1A1A1A',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -120,15 +120,17 @@ export const PeopleScreen: React.FC = () => {
   const titleStyle = {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: isDarkMode ? '#f8fafc' : '#0F172A',
+    color: '#FFFFFF',
     marginBottom: 16,
   };
 
   const tabContainerStyle = {
     flexDirection: 'row' as const,
-    backgroundColor: isDarkMode ? '#334155' : '#F1F5F9',
+    backgroundColor: 'rgba(26, 26, 26, 0.8)',
     borderRadius: 12,
     padding: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 166, 35, 0.2)',
   };
 
   const tabButtonStyle = (active: boolean) => ({
@@ -136,25 +138,37 @@ export const PeopleScreen: React.FC = () => {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: active 
-      ? (isDarkMode ? '#6366f1' : 'white')
+    backgroundColor: active
+      ? '#F5A623'
       : 'transparent',
+    shadowColor: active ? '#F5A623' : 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: active ? 0.6 : 0,
+    shadowRadius: active ? 8 : 0,
+    elevation: active ? 8 : 0,
   });
 
   const tabTextStyle = (active: boolean) => ({
     textAlign: 'center' as const,
     fontSize: 14,
-    fontWeight: '600' as const,
-    color: active 
-      ? (isDarkMode ? 'white' : '#6366f1')
-      : (isDarkMode ? '#94a3b8' : '#64748B'),
+    fontWeight: '700' as const,
+    color: active
+      ? '#0A0A0A'
+      : '#B8B8B8',
   });
 
   const cardStyle = {
-    backgroundColor: isDarkMode ? '#1e293b' : 'white',
+    backgroundColor: 'rgba(26, 26, 26, 0.9)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 166, 35, 0.15)',
+    shadowColor: '#F5A623',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   };
 
   const renderInvite = ({ item }: { item: TeamInvite }) => (
@@ -164,7 +178,7 @@ export const PeopleScreen: React.FC = () => {
           width: 40,
           height: 40,
           borderRadius: 20,
-          backgroundColor: theme.colors.primary,
+          backgroundColor: '#F5A623',
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: 12,
@@ -177,23 +191,23 @@ export const PeopleScreen: React.FC = () => {
           <Text style={{
             fontSize: 16,
             fontWeight: 'bold',
-            color: isDarkMode ? '#f8fafc' : '#0F172A',
+            color: '#FFFFFF',
           }}>
             {item.from_profile?.full_name || 'Unknown User'}
           </Text>
           <Text style={{
             fontSize: 14,
-            color: isDarkMode ? '#94a3b8' : '#64748B',
+            color: '#B8B8B8',
           }}>
             wants to team up for {item.hackathon?.title}
           </Text>
         </View>
       </View>
-      
+
       {item.message && (
         <Text style={{
           fontSize: 14,
-          color: isDarkMode ? '#94a3b8' : '#64748B',
+          color: '#B8B8B8',
           marginBottom: 12,
           fontStyle: 'italic',
         }}>
@@ -205,14 +219,19 @@ export const PeopleScreen: React.FC = () => {
         <TouchableOpacity
           style={{
             flex: 1,
-            backgroundColor: theme.colors.primary,
-            paddingVertical: 8,
+            backgroundColor: '#F5A623',
+            paddingVertical: 10,
             borderRadius: 8,
             alignItems: 'center',
+            shadowColor: '#F5A623',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 10,
+            elevation: 8,
           }}
           onPress={() => handleInviteResponse(item.id, 'accepted')}
         >
-          <Text style={{ color: 'white', fontWeight: '600' }}>Accept</Text>
+          <Text style={{ color: '#0A0A0A', fontWeight: '700', fontSize: 15 }}>Accept</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={{
@@ -238,40 +257,40 @@ export const PeopleScreen: React.FC = () => {
       onPress={() => navigation.navigate('TeamDetail' as never, { team: item } as never)}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <Ionicons 
-          name="people" 
-          size={20} 
-          color={theme.colors.primary} 
+        <Ionicons
+          name="people"
+          size={20}
+          color={'#F5A623'}
           style={{ marginRight: 8 }}
         />
         <Text style={{
           fontSize: 16,
           fontWeight: 'bold',
-          color: isDarkMode ? '#f8fafc' : '#0F172A',
+          color: '#FFFFFF',
           flex: 1,
         }}>
           {item.name}
         </Text>
         <Text style={{
           fontSize: 12,
-          color: isDarkMode ? '#94a3b8' : '#64748B',
+          color: '#B8B8B8',
         }}>
           {item.members.length}/{item.max_members} members
         </Text>
       </View>
-      
+
       <Text style={{
         fontSize: 14,
-        color: isDarkMode ? '#94a3b8' : '#64748B',
+        color: '#B8B8B8',
         marginBottom: 8,
       }}>
         {item.hackathon?.title}
       </Text>
-      
+
       {item.description && (
         <Text style={{
           fontSize: 14,
-          color: isDarkMode ? '#94a3b8' : '#64748B',
+          color: '#B8B8B8',
         }}>
           {item.description}
         </Text>
@@ -289,7 +308,7 @@ export const PeopleScreen: React.FC = () => {
           width: 50,
           height: 50,
           borderRadius: 25,
-          backgroundColor: theme.colors.primary,
+          backgroundColor: '#F5A623',
           alignItems: 'center',
           justifyContent: 'center',
           marginRight: 12,
@@ -302,13 +321,13 @@ export const PeopleScreen: React.FC = () => {
           <Text style={{
             fontSize: 16,
             fontWeight: 'bold',
-            color: isDarkMode ? '#f8fafc' : '#0F172A',
+            color: '#FFFFFF',
           }}>
             {item.other_user.full_name}
           </Text>
           <Text style={{
             fontSize: 14,
-            color: isDarkMode ? '#94a3b8' : '#64748B',
+            color: '#B8B8B8',
           }} numberOfLines={1}>
             {item.last_message?.content || 'No messages yet'}
           </Text>
@@ -324,7 +343,7 @@ export const PeopleScreen: React.FC = () => {
           )}
           {item.unread_count > 0 && (
             <View style={{
-              backgroundColor: theme.colors.primary,
+              backgroundColor: '#F5A623',
               borderRadius: 10,
               minWidth: 20,
               height: 20,
@@ -344,22 +363,22 @@ export const PeopleScreen: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-      <Ionicons 
-        name={activeTab === 'messages' ? 'chatbubble-outline' : activeTab === 'invites' ? 'mail-outline' : 'people-outline'} 
-        size={48} 
-        color={isDarkMode ? '#64748b' : '#94A3B8'} 
+      <Ionicons
+        name={activeTab === 'messages' ? 'chatbubble-outline' : activeTab === 'invites' ? 'mail-outline' : 'people-outline'}
+        size={48}
+        color={isDarkMode ? '#64748b' : '#94A3B8'}
       />
       <Text style={{
         fontSize: 16,
-        color: isDarkMode ? '#94a3b8' : '#64748B',
+        color: '#B8B8B8',
         textAlign: 'center',
         marginTop: 12,
       }}>
         {activeTab === 'messages'
           ? 'No conversations yet\nStart chatting with teammates!'
-          : activeTab === 'invites' 
-          ? 'No team invites yet\nSwipe right on hackathons to find teammates!'
-          : 'No teams yet\nAccept invites or create teams to get started!'
+          : activeTab === 'invites'
+            ? 'No team invites yet\nSwipe right on hackathons to find teammates!'
+            : 'No teams yet\nAccept invites or create teams to get started!'
         }
       </Text>
     </View>
@@ -368,8 +387,11 @@ export const PeopleScreen: React.FC = () => {
   return (
     <SafeAreaView style={containerStyle}>
       <View style={headerStyle}>
-        <Text style={titleStyle}>People</Text>
-        
+        <Text style={titleStyle}>
+          <Text style={{ color: '#F5A623' }}>Peo</Text>
+          <Text style={{ color: '#FFFFFF' }}>ple</Text>
+        </Text>
+
         <View style={tabContainerStyle}>
           <TouchableOpacity
             style={tabButtonStyle(activeTab === 'search')}
@@ -406,12 +428,12 @@ export const PeopleScreen: React.FC = () => {
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: isDarkMode ? '#475569' : '#E2E8F0',
+                borderColor: 'rgba(245, 166, 35, 0.3)',
                 borderRadius: 12,
                 padding: 16,
                 fontSize: 16,
-                color: isDarkMode ? '#f8fafc' : '#0F172A',
-                backgroundColor: isDarkMode ? '#334155' : 'white',
+                color: '#FFFFFF',
+                backgroundColor: 'rgba(26, 26, 26, 0.8)',
                 marginBottom: 16,
               }}
               placeholder="Search users by name or username..."
@@ -432,7 +454,7 @@ export const PeopleScreen: React.FC = () => {
                       width: 50,
                       height: 50,
                       borderRadius: 25,
-                      backgroundColor: theme.colors.primary,
+                      backgroundColor: '#F5A623',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginRight: 12,
@@ -445,20 +467,20 @@ export const PeopleScreen: React.FC = () => {
                       <Text style={{
                         fontSize: 16,
                         fontWeight: 'bold',
-                        color: isDarkMode ? '#f8fafc' : '#0F172A',
+                        color: '#FFFFFF',
                       }}>
                         {item.full_name}
                       </Text>
                       <Text style={{
                         fontSize: 14,
-                        color: isDarkMode ? '#94a3b8' : '#64748B',
+                        color: '#B8B8B8',
                       }}>
                         @{item.username}
                       </Text>
                       {item.bio && (
                         <Text style={{
                           fontSize: 12,
-                          color: isDarkMode ? '#94a3b8' : '#64748B',
+                          color: '#B8B8B8',
                           marginTop: 4,
                         }} numberOfLines={1}>
                           {item.bio}
@@ -475,7 +497,7 @@ export const PeopleScreen: React.FC = () => {
                   <Ionicons name="search-outline" size={48} color={isDarkMode ? '#64748b' : '#94A3B8'} />
                   <Text style={{
                     fontSize: 16,
-                    color: isDarkMode ? '#94a3b8' : '#64748B',
+                    color: '#B8B8B8',
                     textAlign: 'center',
                     marginTop: 12,
                   }}>
@@ -487,7 +509,7 @@ export const PeopleScreen: React.FC = () => {
             />
           </>
         )}
-        
+
         {activeTab === 'messages' && (
           <FlatList
             data={conversations}
@@ -497,7 +519,7 @@ export const PeopleScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
           />
         )}
-        
+
         {activeTab === 'invites' && (
           <FlatList
             data={invites.filter(invite => invite.status === 'pending')}

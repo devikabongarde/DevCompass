@@ -29,7 +29,7 @@ export const CalendarScreen: React.FC = () => {
   const getHackathonDates = (hackathon: any) => {
     const dates = [];
     const now = new Date();
-    
+
     // Try to find start and end dates
     const possibleStartFields = [
       hackathon.start_date,
@@ -37,7 +37,7 @@ export const CalendarScreen: React.FC = () => {
       hackathon.hackathon_start_date,
       hackathon.begin_date
     ];
-    
+
     const possibleEndFields = [
       hackathon.end_date,
       hackathon.event_end_date,
@@ -46,10 +46,10 @@ export const CalendarScreen: React.FC = () => {
       hackathon.deadline,
       hackathon.submission_deadline
     ];
-    
+
     let startDate = null;
     let endDate = null;
-    
+
     // Find start date
     for (const dateField of possibleStartFields) {
       if (dateField) {
@@ -59,10 +59,10 @@ export const CalendarScreen: React.FC = () => {
             startDate = date;
             break;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
-    
+
     // Find end date
     for (const dateField of possibleEndFields) {
       if (dateField) {
@@ -72,13 +72,13 @@ export const CalendarScreen: React.FC = () => {
             endDate = date;
             break;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
-    
+
     // Determine which date to use
     let targetDate = null;
-    
+
     if (startDate && endDate) {
       // If hackathon is ongoing (start date passed, end date future)
       if (startDate <= now && endDate >= now) {
@@ -91,7 +91,7 @@ export const CalendarScreen: React.FC = () => {
     } else if (endDate) {
       targetDate = endDate;
     }
-    
+
     if (targetDate) {
       dates.push({
         year: targetDate.getFullYear(),
@@ -99,7 +99,7 @@ export const CalendarScreen: React.FC = () => {
         day: targetDate.getDate()
       });
     }
-    
+
     // If no structured dates found, try to extract from description
     if (dates.length === 0 && hackathon.description) {
       const datePatterns = [
@@ -107,7 +107,7 @@ export const CalendarScreen: React.FC = () => {
         /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),?\s+(\d{4})\b/gi,
         /\b(\d{4})-(\d{2})-(\d{2})\b/g
       ];
-      
+
       for (const pattern of datePatterns) {
         const matches = hackathon.description.match(pattern);
         if (matches && matches.length > 0) {
@@ -121,11 +121,11 @@ export const CalendarScreen: React.FC = () => {
               });
               break;
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       }
     }
-    
+
     // If still no dates found, use current date as fallback
     if (dates.length === 0) {
       dates.push({
@@ -134,16 +134,16 @@ export const CalendarScreen: React.FC = () => {
         day: now.getDate()
       });
     }
-    
+
     return dates;
   };
 
   const getHackathonsForDate = (day: number) => {
     return savedHackathons.filter(hackathon => {
       const hackathonDates = getHackathonDates(hackathon);
-      return hackathonDates.some(date => 
-        date.year === selectedYear && 
-        date.month === selectedMonth && 
+      return hackathonDates.some(date =>
+        date.year === selectedYear &&
+        date.month === selectedMonth &&
         date.day === day
       );
     });
@@ -171,10 +171,10 @@ export const CalendarScreen: React.FC = () => {
     for (let day = 1; day <= daysInMonth; day++) {
       const hackathonsForDay = getHackathonsForDate(day);
       const hasEvent = hackathonsForDay.length > 0;
-      
+
       days.push(
-        <TouchableOpacity 
-          key={day} 
+        <TouchableOpacity
+          key={day}
           style={[
             styles.dayCell,
             hasEvent && styles.dayWithEvent,
@@ -184,7 +184,7 @@ export const CalendarScreen: React.FC = () => {
         >
           <Text style={[
             styles.dayText,
-            { color: isDarkMode ? '#f8fafc' : '#0F172A' },
+            { color: '#FFFFFF' },
             hasEvent && styles.dayTextWithEvent,
             selectedDay === day && styles.selectedDayText
           ]}>
@@ -199,115 +199,128 @@ export const CalendarScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#0A0A0A' }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={[styles.header, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
-        <Text style={[styles.title, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Calendar</Text>
-        <Text style={[styles.subtitle, { color: isDarkMode ? '#94a3b8' : '#64748B' }]}>{savedHackathons.length} saved hackathons</Text>
-      </View>
-
-      {/* Month/Year Selector */}
-      <View style={[styles.monthSelector, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
-        <TouchableOpacity 
-          onPress={() => {
-            if (selectedMonth === 0) {
-              setSelectedMonth(11);
-              setSelectedYear(selectedYear - 1);
-            } else {
-              setSelectedMonth(selectedMonth - 1);
-            }
-          }}
-        >
-          <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-        
-        <Text style={[styles.monthYear, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>
-          {months[selectedMonth]} {selectedYear}
-        </Text>
-        
-        <TouchableOpacity 
-          onPress={() => {
-            if (selectedMonth === 11) {
-              setSelectedMonth(0);
-              setSelectedYear(selectedYear + 1);
-            } else {
-              setSelectedMonth(selectedMonth + 1);
-            }
-          }}
-        >
-          <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Calendar Grid */}
-      <View style={[styles.calendar, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
-        {/* Day Headers */}
-        <View style={styles.dayHeaders}>
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <Text key={day} style={[styles.dayHeader, { color: isDarkMode ? '#94a3b8' : '#64748B' }]}>{day}</Text>
-          ))}
-        </View>
-        
-        {/* Calendar Days */}
-        <View style={styles.daysGrid}>
-          {renderCalendarGrid().map((day, index) => {
-            if (React.isValidElement(day)) {
-              return React.cloneElement(day, {
-                key: day.key || index,
-                style: [
-                  day.props.style,
-                  day.props.children && day.props.children[0] && {
-                    color: isDarkMode ? '#f8fafc' : '#0F172A'
-                  }
-                ]
-              });
-            }
-            return day;
-          })}
-        </View>
-      </View>
-
-      {/* Hackathons for Selected Day */}
-      {selectedDay && (
-        <View style={[styles.selectedDayEvents, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
-          <Text style={[styles.selectedDayTitle, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>
-            {months[selectedMonth]} {selectedDay}, {selectedYear}
+        <View style={[styles.header, { backgroundColor: '#0A0A0A', borderBottomWidth: 1, borderBottomColor: 'rgba(245, 166, 35, 0.2)' }]}>
+          <Text style={[styles.title, { color: '#FFFFFF' }]}>
+            <Text style={{ color: '#F5A623' }}>Calen</Text>
+            <Text style={{ color: '#FFFFFF' }}>dar</Text>
           </Text>
-          {getHackathonsForDate(selectedDay).map((hackathon) => (
-            <TouchableOpacity 
-              key={hackathon.id} 
-              style={[styles.dayEventCard, { backgroundColor: isDarkMode ? '#334155' : '#F8FAFC' }]}
-              onPress={() => navigation.navigate('HackathonDetail' as never, { hackathon } as never)}
-            >
-              <View style={styles.hackathonHeader}>
-                <Text style={[styles.hackathonTitle, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]} numberOfLines={2}>
-                  {hackathon.title}
-                </Text>
-                <View style={[
-                  styles.platformBadge,
-                  { backgroundColor: hackathon.platform_source === 'unstop' ? '#FF6B35' : '#003E54' }
-                ]}>
-                  <Text style={styles.platformText}>
-                    {hackathon.platform_source.toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-              {hackathon.prize_money && (
-                <Text style={styles.hackathonPrize}>
-                  💰 {hackathon.prize_money.replace(/<[^>]*>/g, '').replace(/&gt;/g, '>')}
-                </Text>
-              )}
-              <Text style={[styles.hackathonDescription, { color: isDarkMode ? '#94a3b8' : '#64748B' }]} numberOfLines={2}>
-                {hackathon.short_summary || hackathon.description}
-              </Text>
-              <View style={styles.tapHint}>
-                <Text style={[styles.tapHintText, { color: isDarkMode ? '#64748b' : '#94A3B8' }]}>Tap for details</Text>
-                <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
-              </View>
-            </TouchableOpacity>
-          ))}
+          <Text style={[styles.subtitle, { color: '#B8B8B8' }]}>{savedHackathons.length} saved hackathons</Text>
         </View>
-      )}
+
+        {/* Premium Month/Year Selector */}
+        <View style={[styles.monthSelector, { backgroundColor: 'rgba(26, 26, 26, 0.9)', borderWidth: 1, borderColor: 'rgba(245, 166, 35, 0.2)' }]}>
+          <TouchableOpacity
+            style={{
+              padding: 8,
+              borderRadius: 8,
+              backgroundColor: 'rgba(245, 166, 35, 0.1)',
+            }}
+            onPress={() => {
+              if (selectedMonth === 0) {
+                setSelectedMonth(11);
+                setSelectedYear(selectedYear - 1);
+              } else {
+                setSelectedMonth(selectedMonth - 1);
+              }
+            }}
+          >
+            <Ionicons name="chevron-back" size={24} color="#F5A623" />
+          </TouchableOpacity>
+
+          <Text style={[styles.monthYear, { color: '#F5A623', fontWeight: '800', fontSize: 20 }]}>
+            {months[selectedMonth]} {selectedYear}
+          </Text>
+
+          <TouchableOpacity
+            style={{
+              padding: 8,
+              borderRadius: 8,
+              backgroundColor: 'rgba(245, 166, 35, 0.1)',
+            }}
+            onPress={() => {
+              if (selectedMonth === 11) {
+                setSelectedMonth(0);
+                setSelectedYear(selectedYear + 1);
+              } else {
+                setSelectedMonth(selectedMonth + 1);
+              }
+            }}
+          >
+            <Ionicons name="chevron-forward" size={24} color="#F5A623" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Premium Calendar Grid */}
+        <View style={[styles.calendar, { backgroundColor: 'rgba(26, 26, 26, 0.9)', borderWidth: 1, borderColor: 'rgba(245, 166, 35, 0.2)' }]}>
+          {/* Day Headers */}
+          <View style={styles.dayHeaders}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <Text key={day} style={[styles.dayHeader, { color: '#F5A623', fontWeight: '700' }]}>{day}</Text>
+            ))}
+          </View>
+
+          {/* Calendar Days */}
+          <View style={styles.daysGrid}>
+            {renderCalendarGrid().map((day, index) => {
+              if (React.isValidElement(day)) {
+                return React.cloneElement(day, {
+                  key: day.key || index,
+                  style: [
+                    day.props.style,
+                    day.props.children && day.props.children[0] && {
+                      color: '#FFFFFF'
+                    }
+                  ]
+                });
+              }
+              return day;
+            })}
+          </View>
+        </View>
+
+        {/* Hackathons for Selected Day */}
+        {selectedDay && (
+          <View style={[styles.selectedDayEvents, { backgroundColor: 'rgba(26, 26, 26, 0.9)', borderWidth: 1, borderColor: 'rgba(245, 166, 35, 0.2)' }]}>
+            <Text style={[styles.selectedDayTitle, { color: '#F5A623', fontWeight: '800' }]}>
+              {months[selectedMonth]} {selectedDay}, {selectedYear}
+            </Text>
+            {getHackathonsForDate(selectedDay).map((hackathon) => (
+              <TouchableOpacity
+                key={hackathon.id}
+                style={[styles.dayEventCard, { backgroundColor: 'rgba(245, 166, 35, 0.08)', borderWidth: 1, borderColor: 'rgba(245, 166, 35, 0.2)' }]}
+                onPress={() => navigation.navigate('HackathonDetail' as never, { hackathon } as never)}
+              >
+                <View style={styles.hackathonHeader}>
+                  <Text style={[styles.hackathonTitle, { color: '#FFFFFF' }]} numberOfLines={2}>
+                    {hackathon.title}
+                  </Text>
+                  <View style={[
+                    styles.platformBadge,
+                    { backgroundColor: '#F5A623', borderWidth: 1, borderColor: '#FFD700' }
+                  ]}>
+                    <Text style={[styles.platformText, { color: '#0A0A0A', fontWeight: '800' }]}>
+                      {hackathon.platform_source.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+                {hackathon.prize_money && (
+                  <Text style={styles.hackathonPrize}>
+                    💰 {hackathon.prize_money.replace(/<[^>]*>/g, '').replace(/&gt;/g, '>')}
+                  </Text>
+                )}
+                <Text style={[styles.hackathonDescription, { color: '#B8B8B8' }]} numberOfLines={2}>
+                  {hackathon.short_summary || hackathon.description}
+                </Text>
+                <View style={styles.tapHint}>
+                  <Text style={[styles.tapHintText, { color: isDarkMode ? '#64748b' : '#94A3B8' }]}>Tap for details</Text>
+                  <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -328,32 +341,35 @@ export const ProfileScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#0f172a' : '#F8FAFC' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#0A0A0A' }]}>
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 48 }}>
         {/* Profile Header */}
-        <View style={[styles.profileHeader, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
-          <View style={[styles.avatarContainer, { backgroundColor: isDarkMode ? '#334155' : '#EEF2FF' }]}>
-            <Ionicons name="person" size={40} color={theme.colors.primary} />
+        <View style={[styles.profileHeader, { backgroundColor: 'rgba(26, 26, 26, 0.9)', borderBottomWidth: 1, borderBottomColor: 'rgba(245, 166, 35, 0.2)' }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: 'rgba(245, 166, 35, 0.2)', borderWidth: 2, borderColor: '#F5A623' }]}>
+            <Ionicons name="person" size={40} color="#F5A623" />
           </View>
-          <Text style={[styles.userName, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>{user?.email || 'User'}</Text>
-          <Text style={[styles.userEmail, { color: isDarkMode ? '#94a3b8' : '#64748B' }]}>{user?.email}</Text>
+          <Text style={[styles.userName, { color: '#FFFFFF' }]}>
+            <Text style={{ color: '#F5A623' }}>Pro</Text>
+            <Text style={{ color: '#FFFFFF' }}>file</Text>
+          </Text>
+          <Text style={[styles.userEmail, { color: '#B8B8B8' }]}>{user?.email}</Text>
         </View>
 
         {/* Stats */}
         <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
+          <View style={[styles.statCard, { backgroundColor: '#1A1A1A' }]}>
             <Text style={styles.statNumber}>{savedHackathons.length}</Text>
-            <Text style={[styles.statLabel, { color: isDarkMode ? '#94a3b8' : '#64748B' }]}>Saved Hackathons</Text>
+            <Text style={[styles.statLabel, { color: '#B8B8B8' }]}>Saved Hackathons</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
+          <View style={[styles.statCard, { backgroundColor: '#1A1A1A' }]}>
             <Text style={styles.statNumber}>0</Text>
-            <Text style={[styles.statLabel, { color: isDarkMode ? '#94a3b8' : '#64748B' }]}>Participated</Text>
+            <Text style={[styles.statLabel, { color: '#B8B8B8' }]}>Participated</Text>
           </View>
         </View>
 
         {/* Quick Actions */}
         <View style={{
-          backgroundColor: isDarkMode ? '#1e293b' : 'white',
+          backgroundColor: '#1A1A1A',
           borderRadius: 12,
           padding: 16,
           marginBottom: 12,
@@ -362,12 +378,12 @@ export const ProfileScreen: React.FC = () => {
           <Text style={{
             fontSize: 18,
             fontWeight: 'bold',
-            color: isDarkMode ? '#f8fafc' : '#0F172A',
+            color: '#FFFFFF',
             marginBottom: 16,
           }}>
             Quick Actions
           </Text>
-          
+
           <TouchableOpacity
             style={{
               flexDirection: 'row',
@@ -378,10 +394,10 @@ export const ProfileScreen: React.FC = () => {
             }}
             onPress={() => navigation.navigate('UserProfile' as never, { userId: user?.id } as never)}
           >
-            <Ionicons name="person-outline" size={20} color={theme.colors.primary} />
+            <Ionicons name="person-outline" size={20} color={'#F5A623'} />
             <Text style={{
               fontSize: 16,
-              color: isDarkMode ? '#f8fafc' : '#0F172A',
+              color: '#FFFFFF',
               marginLeft: 12,
               flex: 1,
             }}>
@@ -391,46 +407,46 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
 
         </View>
-        <View style={[styles.menuContainer, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
-          <TouchableOpacity 
+        <View style={[styles.menuContainer, { backgroundColor: '#1A1A1A' }]}>
+          <TouchableOpacity
             style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
             onPress={() => navigation.navigate('SavedHackathons' as never)}
           >
-            <Ionicons name="heart" size={24} color={theme.colors.primary} />
-            <Text style={[styles.menuText, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Saved Hackathons</Text>
+            <Ionicons name="heart" size={24} color={'#F5A623'} />
+            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Saved Hackathons</Text>
             <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
             onPress={() => navigation.navigate('Notifications' as never)}
           >
-            <Ionicons name="notifications" size={24} color={theme.colors.primary} />
-            <Text style={[styles.menuText, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Notifications</Text>
+            <Ionicons name="notifications" size={24} color={'#F5A623'} />
+            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Notifications</Text>
             <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
             onPress={() => navigation.navigate('Settings' as never)}
           >
-            <Ionicons name="settings" size={24} color={theme.colors.primary} />
-            <Text style={[styles.menuText, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Settings</Text>
+            <Ionicons name="settings" size={24} color={'#F5A623'} />
+            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Settings</Text>
             <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
             onPress={() => navigation.navigate('HelpSupport' as never)}
           >
-            <Ionicons name="help-circle" size={24} color={theme.colors.primary} />
-            <Text style={[styles.menuText, { color: isDarkMode ? '#f8fafc' : '#0F172A' }]}>Help & Support</Text>
+            <Ionicons name="help-circle" size={24} color={'#F5A623'} />
+            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
           </TouchableOpacity>
         </View>
 
         {/* Sign Out */}
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]} onPress={handleSignOut}>
+        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: '#1A1A1A' }]} onPress={handleSignOut}>
           <Ionicons name="log-out" size={24} color="#EF4444" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
@@ -518,7 +534,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#F5A623',
+    shadowColor: '#F5A623',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5,
   },
   hackathonsList: {
     flex: 1,
@@ -582,16 +603,23 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   dayWithEvent: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: 'rgba(245, 166, 35, 0.15)',
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 166, 35, 0.3)',
   },
   selectedDay: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#F5A623',
     borderRadius: 20,
+    shadowColor: '#F5A623',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 8,
   },
   dayTextWithEvent: {
-    color: theme.colors.primary,
-    fontWeight: 'bold',
+    color: '#F5A623',
+    fontWeight: '800' as const,
   },
   selectedDayText: {
     color: 'white',
@@ -676,7 +704,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    color: '#F5A623',
     marginBottom: 4,
   },
   statLabel: {

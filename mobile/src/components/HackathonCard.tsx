@@ -8,9 +8,11 @@ import {
   Dimensions,
   Animated,
   Share,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Hackathon } from '../types';
 import { theme } from '../theme';
 import { useSavedStore, useThemeStore } from '../stores';
@@ -37,12 +39,11 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
   const [likeAnimation] = useState(new Animated.Value(0));
   const lastTapRef = useRef(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const insets = useSafeAreaInsets();
 
   const handleDoubleTap = () => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
-    
+
     if (lastTapRef.current && (now - lastTapRef.current) < DOUBLE_PRESS_DELAY) {
       // Double tap - like the hackathon
       if (timeoutRef.current) {
@@ -111,7 +112,7 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return 'Expired';
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Tomorrow';
@@ -127,150 +128,151 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
   };
 
   const getPlaceholderBgColor = (platform: string) => {
-    const platformColor = getPlatformColor(platform);
-    // Add transparency to platform color for background
-    if (platform === 'unstop') return 'rgba(255, 107, 53, 0.15)';  // Orange with opacity
-    if (platform === 'devpost') return 'rgba(0, 62, 84, 0.15)';    // Dark blue with opacity
-    if (platform === 'devfolio') return 'rgba(99, 102, 241, 0.15)'; // Indigo with opacity
-    return isDarkMode ? '#334155' : theme.colors.backgroundSecondary;
+    if (platform === 'unstop') return 'rgba(255, 107, 53, 0.15)';
+    if (platform === 'devpost') return 'rgba(0, 62, 84, 0.15)';
+    if (platform === 'devfolio') return 'rgba(99, 102, 241, 0.15)';
+    return '#334155';
   };
 
   return (
-    <TouchableOpacity style={[styles.container, { backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface }]} onPress={handleDoubleTap} activeOpacity={0.95}>
-      {/* Banner Image */}
-      <View style={styles.imageContainer}>
+    <TouchableOpacity
+      style={[styles.container, { backgroundColor: '#0A0A0A' }]}
+      onPress={handleDoubleTap}
+      activeOpacity={0.95}
+    >
+      {/* Immersive Background Image */}
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#000' }]}>
         {hackathon.banner_url ? (
-          <Image source={{ uri: hackathon.banner_url }} style={styles.image} />
+          <>
+            {/* Blurred Background Layer - Fills the screen with color */}
+            <Image
+              source={{ uri: hackathon.banner_url }}
+              style={[styles.image, { opacity: 0.6 }]}
+              blurRadius={Platform.OS === 'ios' ? 20 : 10}
+            />
+            {/* Foreground Layer - Shows full image without cropping */}
+            <Image
+              source={{ uri: hackathon.banner_url }}
+              style={[StyleSheet.absoluteFill, { width: '100%', height: '100%', resizeMode: 'contain' }]}
+            />
+          </>
         ) : (
           <View style={[styles.image, styles.placeholderImage, { backgroundColor: getPlaceholderBgColor(hackathon.platform_source) }]}>
-            <Ionicons name="code-slash" size={48} color={getPlatformColor(hackathon.platform_source)} />
+            <Ionicons name="code-slash" size={80} color={getPlatformColor(hackathon.platform_source)} />
           </View>
         )}
-        
-        {/* Platform Badge */}
-        <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(hackathon.platform_source) }]}>
-          <Text style={styles.platformText}>
+
+        {/* Subtle Gradient to make sure white text pops if image is light */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)']}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </View>
+
+      {/* Top Badges */}
+      <View style={styles.topContainer}>
+        <View style={[styles.platformBadge, { backgroundColor: '#F5A623', borderColor: '#FFD700', borderWidth: 1 }]}>
+          <Text style={[styles.platformText, { color: '#0A0A0A', fontWeight: '800' }]}>
             {hackathon.platform_source.toUpperCase()}
           </Text>
         </View>
-
-        {/* Like Animation */}
-        <Animated.View
-          style={[
-            styles.likeAnimation,
-            {
-              opacity: likeAnimation,
-              transform: [
-                {
-                  scale: likeAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.5, 1.2],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <Ionicons name="heart" size={80} color="#EF4444" />
-        </Animated.View>
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
-        <Text style={[styles.title, { color: isDarkMode ? '#f8fafc' : theme.colors.text }]} numberOfLines={2}>
-          {hackathon.title}
-        </Text>
-        
-        <Text style={[styles.summary, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]} numberOfLines={3}>
-          {hackathon.short_summary || hackathon.description}
-        </Text>
+      {/* Like Animation */}
+      <Animated.View
+        style={[
+          styles.likeAnimation,
+          {
+            opacity: likeAnimation,
+            transform: [
+              {
+                scale: likeAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.5, 1.2],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Ionicons name="heart" size={120} color="#EF4444" />
+      </Animated.View>
 
-        {/* Tags */}
-        {hackathon.themes.length > 0 && (
-          <View style={styles.tagsContainer}>
-            {hackathon.themes.slice(0, 3).map((themeName, index) => (
-              <View key={index} style={[styles.tag, { backgroundColor: isDarkMode ? '#334155' : theme.colors.primaryLight }]}>
-                <Text style={[styles.tagText, { color: isDarkMode ? '#94a3b8' : theme.colors.primary }]}>{themeName}</Text>
-              </View>
-            ))}
-            {hackathon.themes.length > 3 && (
-              <Text style={[styles.moreTagsText, { color: isDarkMode ? '#64748b' : theme.colors.textLight }]}>+{hackathon.themes.length - 3}</Text>
-            )}
-          </View>
-        )}
+      {/* Floating Glass Content Card (The "Card within a Card") */}
+      <View style={styles.floatingGlassCard}>
+        {/* Content */}
+        <View style={styles.contentInner}>
+          <Text style={[styles.title, { color: '#FFFFFF' }]} numberOfLines={2}>
+            {hackathon.title}
+          </Text>
 
-        {/* Bottom Info */}
-        <View style={styles.bottomInfo}>
-          <View style={styles.infoRow}>
-            {hackathon.prize_money && (
-              <View style={styles.infoItem}>
-                <Ionicons name="trophy" size={16} color={theme.colors.secondary} />
-                <Text style={[styles.infoText, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>
-                  {(() => {
-                    let prize = hackathon.prize_money;
-                    prize = prize.replace(/<[^>]*>/g, '');
-                    prize = prize.replace(/&nbsp;/g, ' ');
-                    prize = prize.replace(/&amp;/g, '&');
-                    prize = prize.replace(/&lt;/g, '<');
-                    prize = prize.replace(/&gt;/g, '>');
-                    prize = prize.replace(/&quot;/g, '"');
-                    prize = prize.replace(/\s+/g, ' ').trim();
-                    return prize || 'N/A';
-                  })()}
-                </Text>
-              </View>
-            )}
-            
-            {hackathon.registration_deadline && (
-              <View style={styles.infoItem}>
-                <Ionicons name="time" size={16} color={theme.colors.error} />
-                <Text style={[styles.infoText, { color: theme.colors.error }]}>
-                  {formatDeadline(hackathon.registration_deadline)}
-                </Text>
-              </View>
-            )}
-          </View>
+          <Text style={[styles.summary, { color: '#E2E8F0' }]} numberOfLines={2}>
+            {hackathon.short_summary || hackathon.description}
+          </Text>
 
-          {hackathon.location_mode && (
-            <View style={styles.infoItem}>
-              <Ionicons 
-                name={hackathon.location_mode === 'online' ? 'globe' : 'location'} 
-                size={16} 
-                color={isDarkMode ? '#94a3b8' : theme.colors.textSecondary} 
-              />
-              <Text style={[styles.infoText, { color: isDarkMode ? '#94a3b8' : theme.colors.textSecondary }]}>
-                {hackathon.location_mode.charAt(0).toUpperCase() + hackathon.location_mode.slice(1)}
-              </Text>
+          {/* Tags */}
+          {hackathon.themes.length > 0 && (
+            <View style={styles.tagsContainer}>
+              {hackathon.themes.slice(0, 3).map((themeName, index) => (
+                <View key={index} style={[styles.tag, { backgroundColor: 'rgba(245, 166, 35, 0.25)', borderColor: '#F5A623', borderWidth: 1 }]}>
+                  <Text style={[styles.tagText, { color: '#FFD700', fontWeight: '700' }]}>{themeName}</Text>
+                </View>
+              ))}
             </View>
           )}
-        </View>
-      </View>
 
-      {/* Action Buttons - Moved to bottom */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setLiked(!liked)}>
-          <Ionicons
-            name={liked ? 'heart' : 'heart-outline'}
-            size={28}
-            color={liked ? '#EF4444' : (isDarkMode ? 'white' : theme.colors.primary)}
-          />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
-          <Ionicons
-            name={saved ? 'bookmark' : 'bookmark-outline'}
-            size={28}
-            color={saved ? theme.colors.secondary : (isDarkMode ? 'white' : theme.colors.primary)}
-          />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-          <Ionicons
-            name="paper-plane-outline"
-            size={28}
-            color={isDarkMode ? 'white' : theme.colors.primary}
-          />
-        </TouchableOpacity>
+          {/* Bottom Info */}
+          <View style={styles.bottomInfo}>
+            <View style={styles.infoRow}>
+              {hackathon.prize_money && (
+                <View style={styles.infoItem}>
+                  <Ionicons name="trophy" size={16} color="#FFD700" />
+                  <Text style={[styles.infoText, { color: '#FFD700' }]}>
+                    {(() => {
+                      let prize = hackathon.prize_money;
+                      prize = prize.replace(/<[^>]*>/g, '');
+                      prize = prize.replace(/&nbsp;/g, ' ');
+                      prize = prize.replace(/\s+/g, ' ').trim();
+                      return prize || 'N/A';
+                    })()}
+                  </Text>
+                </View>
+              )}
+
+              {hackathon.registration_deadline && (
+                <View style={styles.infoItem}>
+                  <Ionicons name="time" size={16} color="#FF6B6B" />
+                  <Text style={[styles.infoText, { color: '#FF6B6B', fontWeight: '700' }]}>
+                    {formatDeadline(hackathon.registration_deadline)}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* Action Buttons inside the floating card */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setLiked(!liked)}>
+            <View style={[styles.iconCircle, { borderColor: liked ? '#EF4444' : '#F5A623' }]}>
+              <Ionicons
+                name={liked ? 'heart' : 'heart-outline'}
+                size={24}
+                color={liked ? '#EF4444' : '#F5A623'}
+              />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
+            <View style={[styles.iconCircle, { borderColor: saved ? '#FFD700' : '#F5A623' }]}>
+              <Ionicons
+                name={saved ? 'bookmark' : 'bookmark-outline'}
+                size={24}
+                color={saved ? '#FFD700' : '#F5A623'}
+              />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -279,14 +281,21 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: screenWidth,
-    height: screenHeight,
+    height: screenHeight - 140, // Account for top/bottom bars
     ...theme.shadows.lg,
-    paddingTop: 100, // Account for top bar
-    paddingBottom: 80, // Account for bottom navigation
+    borderRadius: 32, // More rounded outer corners
+    overflow: 'hidden',
+    marginTop: 12,
+    marginBottom: 4,
+    marginHorizontal: 0,
+    backgroundColor: '#000',
   },
-  imageContainer: {
-    height: '45%',
-    position: 'relative',
+  topContainer: {
+    padding: theme.spacing.md,
+    marginTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    zIndex: 20,
   },
   image: {
     width: '100%',
@@ -298,90 +307,116 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   platformBadge: {
-    position: 'absolute',
-    top: theme.spacing.md,
-    left: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   platformText: {
-    color: theme.colors.surface,
+    color: '#0A0A0A',
     fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: 'bold',
+  },
+  // The "Card within a Card"
+  floatingGlassCard: {
+    position: 'absolute',
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(20, 20, 20, 0.85)', // Dark premium glass
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 166, 35, 0.3)', // Gold border
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  contentInner: {
+    flex: 1,
+    marginRight: 10,
   },
   actionButtons: {
-    position: 'absolute',
-    bottom: 20,
-    right: 16,
-    alignItems: 'center',
-    gap: theme.spacing.md,
+    flexDirection: 'column',
+    gap: 12,
   },
   actionButton: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   likeAnimation: {
     position: 'absolute',
-    top: '50%',
+    top: '40%',
     left: '50%',
-    marginTop: -40,
-    marginLeft: -40,
+    marginTop: -60,
+    marginLeft: -60,
     zIndex: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  content: {
-    flex: 1,
-    padding: theme.spacing.md,
-    justifyContent: 'space-between',
-  },
   title: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    marginBottom: theme.spacing.sm,
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 6,
+    lineHeight: 28,
   },
   summary: {
-    fontSize: theme.typography.fontSize.base,
-    lineHeight: theme.typography.lineHeight.relaxed * theme.typography.fontSize.base,
-    marginBottom: theme.spacing.md,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 10,
+    fontWeight: '500',
+    opacity: 0.9,
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 10,
   },
   tag: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    marginRight: theme.spacing.xs,
-    marginBottom: theme.spacing.xs,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginRight: 6,
+    marginBottom: 4,
   },
   tagText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  moreTagsText: {
-    fontSize: theme.typography.fontSize.sm,
-    marginLeft: theme.spacing.xs,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   bottomInfo: {
-    gap: theme.spacing.sm,
+    marginTop: 2,
   },
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    gap: 4,
   },
   infoText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
