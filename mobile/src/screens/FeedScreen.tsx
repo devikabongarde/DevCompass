@@ -55,16 +55,18 @@ export const FeedScreen: React.FC = () => {
   const LOCATIONS = ["online", "offline", "hybrid"];
   const PLATFORMS = ["unstop", "devpost", "devfolio", "hackclub"];
 
-  const toggleFilter = (type: 'themes' | 'locationMode' | 'platforms', value: string) => {
+  const toggleFilter = useCallback((type: 'themes' | 'locationMode' | 'platforms', value: string) => {
     const currentFilters = filters[type] || [];
     const newFilters = currentFilters.includes(value as any)
       ? currentFilters.filter(item => item !== value)
       : [...currentFilters, value];
 
     setFilters({ [type]: newFilters });
-  };
+  }, [filters, setFilters]);
 
-  const activeFiltersCount = (filters.themes?.length || 0) + (filters.locationMode?.length || 0) + (filters.platforms?.length || 0);
+  const activeFiltersCount = useMemo(() => {
+    return (filters.themes?.length || 0) + (filters.locationMode?.length || 0) + (filters.platforms?.length || 0);
+  }, [filters.themes?.length, filters.locationMode?.length, filters.platforms?.length]);
 
   const { saveHackathon, unsaveHackathon, isSaved } = useSavedStore();
   const { checkTeammateStatus, isLookingFor } = useTeammatesStore();
