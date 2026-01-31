@@ -1,15 +1,25 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Linking, Alert, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../theme';
+import { Hackathon } from '../types';
+import { useThemeStore } from '../stores';
+import { messageService, profileService } from '../services/supabase';
 
-// Placeholder screens for new features
-export const HackathonDetailPlaceholder: React.FC = () => (
-  <View style={styles.container}>
-    <Text style={styles.text}>Hackathon Detail Screen</Text>
-  </View>
-);
+const cleanHtmlTags = (text: string): string => {
+  return text
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .trim();
+};
+
+// HackathonDetailScreen moved to its own file
 
 // Smart Matching & RecSys
 export const RoleMatcherScreen: React.FC = () => (

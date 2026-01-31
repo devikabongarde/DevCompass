@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -17,21 +17,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { useFeedStore, useSavedStore, useThemeStore, useTeammatesStore } from '../stores';
+import { useFeedStore, useSavedStore, useThemeStore, useTeammatesStore, useAuthStore } from '../stores';
 import { theme } from '../theme';
 import { Hackathon } from '../types';
 import { HackathonCard } from '../components/HackathonCard';
 import { messageService, profileService } from '../services/supabase';
+import { useSkillBasedRecommendation } from '../hooks/useSkillBasedRecommendation';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
-const CARD_HEIGHT = screenHeight;
+const TOP_BAR_OFFSET = 110;
+const BOTTOM_OFFSET = 20;
+const CARD_HEIGHT = screenHeight - TOP_BAR_OFFSET - BOTTOM_OFFSET;
 
 export const FeedScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
   const navigation = useNavigation();
+  const { profile } = useAuthStore();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
@@ -44,7 +49,29 @@ export const FeedScreen: React.FC = () => {
     loadHackathons,
     loadMore,
     refresh,
+    filters,
+    setFilters
   } = useFeedStore();
+
+  // Get skill-based recommendations
+  const { recommendations } = useSkillBasedRecommendation(profile?.skills || [], hackathons);
+
+  const THEMES = ["AI", "Blockchain", "Web", "Mobile", "Data Science", "Cybersecurity", "IoT", "Cloud", "Fintech", "Healthtech"];
+  const LOCATIONS = ["online", "offline", "hybrid"];
+  const PLATFORMS = ["unstop", "devpost", "devfolio", "hackclub"];
+
+  const toggleFilter = useCallback((type: 'themes' | 'locationMode' | 'platforms', value: string) => {
+    const currentFilters = filters[type] || [];
+    const newFilters = currentFilters.includes(value as any)
+      ? currentFilters.filter(item => item !== value)
+      : [...currentFilters, value];
+
+    setFilters({ [type]: newFilters });
+  }, [filters, setFilters]);
+
+  const activeFiltersCount = useMemo(() => {
+    return (filters.themes?.length || 0) + (filters.locationMode?.length || 0) + (filters.platforms?.length || 0);
+  }, [filters.themes?.length, filters.locationMode?.length, filters.platforms?.length]);
 
   const { saveHackathon, unsaveHackathon, isSaved } = useSavedStore();
   const { checkTeammateStatus, isLookingFor } = useTeammatesStore();
@@ -116,7 +143,7 @@ export const FeedScreen: React.FC = () => {
     }
   };
 
-  const renderHackathon = ({ item }: { item: Hackathon }) => {
+  const renderHackathon = useCallback(({ item }: { item: Hackathon }) => {
     const panResponder = PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => {
         return Math.abs(gestureState.dx) > 20;
@@ -132,17 +159,21 @@ export const FeedScreen: React.FC = () => {
       },
     });
 
+    const recommendation = recommendations[item.id];
+
     return (
-      <View {...panResponder.panHandlers}>
+      <View {...panResponder.panHandlers} style={{ height: CARD_HEIGHT, justifyContent: 'center' }}>
         <HackathonCard
           hackathon={item}
           onSave={() => handleSave(item)}
           onPress={() => handleHackathonPress(item)}
           onShare={handleShare}
+          skillMatchPercentage={recommendation?.matchPercentage || 0}
+          matchedSkills={recommendation?.matchedSkills || []}
         />
       </View>
     );
-  };
+  }, [recommendations]);
 
   const renderEmpty = () => {
     if (loading && hackathons.length === 0) {
@@ -194,6 +225,13 @@ export const FeedScreen: React.FC = () => {
           </Text>
         </View>
         <View style={styles.topBarRight}>
+          <TouchableOpacity
+            style={[styles.iconButton, styles.glassButton, activeFiltersCount > 0 && styles.activeFilterButton]}
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Ionicons name="filter" size={24} color={activeFiltersCount > 0 ? "#FFFFFF" : "#F5A623"} />
+            {activeFiltersCount > 0 && <View style={styles.notificationBadge} />}
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.iconButton, styles.glassButton]}>
             <Ionicons name="notifications-outline" size={24} color="#F5A623" />
             <View style={styles.notificationBadge} />
@@ -212,6 +250,10 @@ export const FeedScreen: React.FC = () => {
         data={hackathons}
         renderItem={renderHackathon}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{
+          paddingTop: TOP_BAR_OFFSET,
+          paddingBottom: BOTTOM_OFFSET,
+        }}
         pagingEnabled
         showsVerticalScrollIndicator={false}
         snapToInterval={CARD_HEIGHT}
@@ -233,12 +275,13 @@ export const FeedScreen: React.FC = () => {
         }
         ListEmptyComponent={renderEmpty}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={3}
-        windowSize={5}
-        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        initialNumToRender={1}
+        scrollEventThrottle={16}
         getItemLayout={(data, index) => ({
           length: CARD_HEIGHT,
-          offset: CARD_HEIGHT * index,
+          offset: CARD_HEIGHT * index + TOP_BAR_OFFSET,
           index,
         })}
       />
@@ -295,6 +338,81 @@ export const FeedScreen: React.FC = () => {
               onPress={() => setShareModalVisible(false)}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Filter Modal */}
+      {filterModalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.filterModal, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
+            <Text style={[styles.shareTitle, { color: isDarkMode ? '#f8fafc' : '#0F172A', marginBottom: 20 }]}>
+              Filter Hackathons
+            </Text>
+
+            <Text style={[styles.filterSectionTitle, { color: isDarkMode ? '#cbd5e1' : '#475569' }]}>Location</Text>
+            <View style={styles.filterOptions}>
+              {LOCATIONS.map(loc => (
+                <TouchableOpacity
+                  key={loc}
+                  style={[
+                    styles.filterChip,
+                    filters.locationMode?.includes(loc as any) && styles.activeFilterChip
+                  ]}
+                  onPress={() => toggleFilter('locationMode', loc)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    filters.locationMode?.includes(loc as any) && styles.activeFilterChipText
+                  ]}>{loc.charAt(0).toUpperCase() + loc.slice(1)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.filterSectionTitle, { color: isDarkMode ? '#cbd5e1' : '#475569', marginTop: 16 }]}>Domains</Text>
+            <View style={styles.filterOptions}>
+              {THEMES.map(themeItem => (
+                <TouchableOpacity
+                  key={themeItem}
+                  style={[
+                    styles.filterChip,
+                    filters.themes?.includes(themeItem) && styles.activeFilterChip
+                  ]}
+                  onPress={() => toggleFilter('themes', themeItem)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    filters.themes?.includes(themeItem) && styles.activeFilterChipText
+                  ]}>{themeItem}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.filterSectionTitle, { color: isDarkMode ? '#cbd5e1' : '#475569', marginTop: 16 }]}>Platforms</Text>
+            <View style={styles.filterOptions}>
+              {PLATFORMS.map(platform => (
+                <TouchableOpacity
+                  key={platform}
+                  style={[
+                    styles.filterChip,
+                    filters.platforms?.includes(platform as any) && styles.activeFilterChip
+                  ]}
+                  onPress={() => toggleFilter('platforms', platform)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    filters.platforms?.includes(platform as any) && styles.activeFilterChipText
+                  ]}>{platform.charAt(0).toUpperCase() + platform.slice(1)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.applyButton, { marginTop: 24 }]}
+              onPress={() => setFilterModalVisible(false)}
+            >
+              <Text style={styles.applyButtonText}>Done</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -638,5 +756,59 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  filterModal: {
+    width: '85%',
+    maxHeight: '70%',
+    borderRadius: 16,
+    padding: 24,
+  },
+  filterSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  filterOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: 'transparent',
+  },
+  activeFilterChip: {
+    backgroundColor: 'rgba(245, 166, 35, 0.15)',
+    borderColor: '#F5A623',
+  },
+  filterChipText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  activeFilterChipText: {
+    color: '#F5A623',
+    fontWeight: '600',
+  },
+  applyButton: {
+    backgroundColor: '#F5A623',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  applyButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  activeFilterButton: {
+    backgroundColor: '#F5A623',
+    borderWidth: 0,
   },
 });

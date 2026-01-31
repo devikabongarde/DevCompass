@@ -53,6 +53,7 @@ import {
   PersonalityMatcherScreen,
   RetroAnalyticsScreen,
 } from '../screens/PlaceholderScreens';
+import HistoricalIntelligenceScreen from '../screens/HistoricalIntelligenceScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -101,6 +102,7 @@ const CustomDrawerContent = (props: any) => {
         { name: 'Unified Timeline', screen: 'TimelineView', icon: 'time' },
         { name: 'Smart Reminders', screen: 'SmartReminders', icon: 'notifications' },
         { name: 'Devpost Generator', screen: 'DevpostGenerator', icon: 'document-text' },
+        { name: 'Historical Intelligence', screen: 'HistoricalIntelligence', icon: 'brain' },
       ],
     },
     {
@@ -302,6 +304,7 @@ const DrawerNavigator: React.FC = () => {
       <Drawer.Screen name="TimelineView" component={TimelineViewScreen} options={{ title: 'Unified Timeline' }} />
       <Drawer.Screen name="SmartReminders" component={SmartRemindersScreen} options={{ title: 'Smart Reminders' }} />
       <Drawer.Screen name="DevpostGenerator" component={DevpostGeneratorScreen} options={{ title: 'Devpost Generator' }} />
+      <Drawer.Screen name="HistoricalIntelligence" component={HistoricalIntelligenceScreen} options={{ title: 'Historical Intelligence' }} />
 
       {/* Discovery & Community */}
       <Drawer.Screen name="HackathonMap" component={HackathonMapScreen} options={{ title: 'Hackathon Map' }} />

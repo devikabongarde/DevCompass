@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,8 @@ interface HackathonCardProps {
   onPress: () => void;
   onSave?: () => void;
   onShare?: (hackathon: Hackathon) => void;
+  skillMatchPercentage?: number;
+  matchedSkills?: string[];
 }
 
 export const HackathonCard: React.FC<HackathonCardProps> = ({
@@ -31,14 +33,23 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
   onPress,
   onSave,
   onShare,
+  skillMatchPercentage = 0,
+  matchedSkills = [],
 }) => {
   const { isSaved, saveHackathon, unsaveHackathon } = useSavedStore();
   const { isDarkMode = false } = useThemeStore();
-  const saved = isSaved(hackathon.id);
   const [liked, setLiked] = useState(false);
+  const [localSaved, setLocalSaved] = useState(() => isSaved(hackathon.id));
   const [likeAnimation] = useState(new Animated.Value(0));
   const lastTapRef = useRef(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saved = isSaved(hackathon.id);
+
+  // Sync localSaved with store state
+  useEffect(() => {
+    setLocalSaved(saved);
+  }, [saved]);
 
   const handleDoubleTap = () => {
     const now = Date.now();
@@ -95,10 +106,12 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
 
   const handleSave = async () => {
     try {
-      if (saved) {
+      if (localSaved) {
         await unsaveHackathon(hackathon.id);
+        setLocalSaved(false);
       } else {
         await saveHackathon(hackathon);
+        setLocalSaved(true);
       }
       onSave?.();
     } catch (error) {
@@ -202,9 +215,53 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
       <View style={styles.floatingGlassCard}>
         {/* Content */}
         <View style={styles.contentInner}>
-          <Text style={[styles.title, { color: '#FFFFFF' }]} numberOfLines={2}>
-            {hackathon.title}
-          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Text style={[styles.title, { color: '#FFFFFF', flex: 1 }]} numberOfLines={2}>
+              {hackathon.title}
+            </Text>
+            {skillMatchPercentage > 0 && (
+              <View style={{
+                backgroundColor: skillMatchPercentage >= 60 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 166, 35, 0.2)',
+                borderColor: skillMatchPercentage >= 60 ? '#22C55E' : '#F5A623',
+                borderWidth: 1,
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                marginLeft: 8,
+              }}>
+                <Text style={{
+                  color: skillMatchPercentage >= 60 ? '#22C55E' : '#F5A623',
+                  fontSize: 11,
+                  fontWeight: '700',
+                }}>
+                  {skillMatchPercentage}% match
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {matchedSkills.length > 0 && (
+            <View style={{ marginTop: 6, marginBottom: 8 }}>
+              <Text style={{ color: '#94A3B8', fontSize: 10, marginBottom: 4 }}>Your skills:</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                {matchedSkills.map((skill, idx) => (
+                  <View
+                    key={idx}
+                    style={{
+                      backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                      borderColor: '#22C55E',
+                      borderWidth: 0.5,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <Text style={{ color: '#22C55E', fontSize: 9, fontWeight: '600' }}>✓ {skill}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           <Text style={[styles.summary, { color: '#E2E8F0' }]} numberOfLines={2}>
             {hackathon.short_summary || hackathon.description}
@@ -252,8 +309,16 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
         </View>
 
         {/* Action Buttons inside the floating card */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => setLiked(!liked)}>
+        <View 
+          style={styles.actionButtons}
+          onStartShouldSetResponder={() => true}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => setLiked(!liked)}
+            activeOpacity={0.7}
+          >
             <View style={[styles.iconCircle, { borderColor: liked ? '#EF4444' : '#F5A623' }]}>
               <Ionicons
                 name={liked ? 'heart' : 'heart-outline'}
@@ -263,12 +328,30 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
-            <View style={[styles.iconCircle, { borderColor: saved ? '#FFD700' : '#F5A623' }]}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={handleSave}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.iconCircle, { borderColor: localSaved ? '#FFD700' : '#F5A623' }]}>
               <Ionicons
-                name={saved ? 'bookmark' : 'bookmark-outline'}
+                name={localSaved ? 'bookmark' : 'bookmark-outline'}
                 size={24}
-                color={saved ? '#FFD700' : '#F5A623'}
+                color={localSaved ? '#FFD700' : '#F5A623'}
+              />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={handleShare}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.iconCircle, { borderColor: '#F5A623' }]}>
+              <Ionicons
+                name="paper-plane"
+                size={24}
+                color="#F5A623"
               />
             </View>
           </TouchableOpacity>
@@ -281,12 +364,12 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: screenWidth,
-    height: screenHeight - 140, // Account for top/bottom bars
+    height: '100%',
     ...theme.shadows.lg,
     borderRadius: 32, // More rounded outer corners
     overflow: 'hidden',
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: 0,
+    marginBottom: 0,
     marginHorizontal: 0,
     backgroundColor: '#000',
   },

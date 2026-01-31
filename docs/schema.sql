@@ -13,7 +13,7 @@ CREATE TABLE hackathons (
   end_date TIMESTAMPTZ,
   registration_deadline TIMESTAMPTZ,
   themes TEXT[], -- Array of tags like ['AI/ML', 'Web3']
-  platform_source TEXT NOT NULL CHECK (platform_source IN ('unstop', 'devpost', 'devfolio')),
+  platform_source TEXT NOT NULL CHECK (platform_source IN ('unstop', 'devpost', 'devfolio', 'hackclub')),
   original_url TEXT NOT NULL UNIQUE,
   eligibility TEXT,
   location_mode TEXT CHECK (location_mode IN ('online', 'offline', 'hybrid')),
