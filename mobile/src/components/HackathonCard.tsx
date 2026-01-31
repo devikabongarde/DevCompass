@@ -272,6 +272,16 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
               />
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+            <View style={[styles.iconCircle, { borderColor: '#F5A623' }]}>
+              <Ionicons
+                name="paper-plane"
+                size={24}
+                color="#F5A623"
+              />
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>

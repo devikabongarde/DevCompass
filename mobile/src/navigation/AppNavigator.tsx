@@ -350,15 +350,7 @@ export const AppNavigator: React.FC = () => {
                 name="HackathonDetail"
                 component={HackathonDetailScreen}
                 options={{
-                  headerShown: true,
-                  headerTitle: '',
-                  headerBackTitleVisible: false,
-                  headerStyle: {
-                    backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface,
-                    shadowColor: 'transparent',
-                    elevation: 0,
-                  },
-                  headerTintColor: isDarkMode ? '#f8fafc' : theme.colors.text,
+                  headerShown: false,
                 }}
               />
               <Stack.Screen name="SavedHackathons" component={SavedHackathonsScreen} />
