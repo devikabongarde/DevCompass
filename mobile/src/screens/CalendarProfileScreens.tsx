@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
+  Image,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,7 +17,7 @@ import { theme } from '../theme';
 
 export const CalendarScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { savedHackathons } = useSavedStore();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -265,11 +267,11 @@ export const CalendarScreen: React.FC = () => {
           <View style={styles.daysGrid}>
             {renderCalendarGrid().map((day, index) => {
               if (React.isValidElement(day)) {
-                return React.cloneElement(day, {
-                  key: day.key || index,
+                return React.cloneElement(day as any, {
+                  key: (day as any).key || index,
                   style: [
-                    day.props.style,
-                    day.props.children && day.props.children[0] && {
+                    (day as any).props.style,
+                    (day as any).props.children && (day as any).props.children[0] && {
                       color: '#FFFFFF'
                     }
                   ]
@@ -290,7 +292,7 @@ export const CalendarScreen: React.FC = () => {
               <TouchableOpacity
                 key={hackathon.id}
                 style={[styles.dayEventCard, { backgroundColor: 'rgba(245, 166, 35, 0.08)', borderWidth: 1, borderColor: 'rgba(245, 166, 35, 0.2)' }]}
-                onPress={() => navigation.navigate('HackathonDetail' as never, { hackathon } as never)}
+                onPress={() => navigation.navigate('HackathonDetail' as any, { hackathon } as any)}
               >
                 <View style={styles.hackathonHeader}>
                   <Text style={[styles.hackathonTitle, { color: '#FFFFFF' }]} numberOfLines={2}>
@@ -327,8 +329,8 @@ export const CalendarScreen: React.FC = () => {
 };
 
 export const ProfileScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const { user, signOut } = useAuthStore();
+  const navigation = useNavigation<any>();
+  const { user, profile, signOut } = useAuthStore();
   const { savedHackathons } = useSavedStore();
   const { isDarkMode = false } = useThemeStore();
 
@@ -342,114 +344,118 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: '#0A0A0A' }]}>
-      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 48 }}>
-        {/* Profile Header */}
-        <View style={[styles.profileHeader, { backgroundColor: 'rgba(26, 26, 26, 0.9)', borderBottomWidth: 1, borderBottomColor: 'rgba(245, 166, 35, 0.2)' }]}>
-          <View style={[styles.avatarContainer, { backgroundColor: 'rgba(245, 166, 35, 0.2)', borderWidth: 2, borderColor: '#F5A623' }]}>
-            <Ionicons name="person" size={40} color="#F5A623" />
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+
+        {/* Profile Header Premium */}
+        <LinearGradient
+          colors={['rgba(245, 166, 35, 0.15)', 'rgba(10, 10, 10, 0)']}
+          style={styles.profileHeaderPremium}
+        >
+          <View style={[styles.avatarContainerLarge, { borderColor: '#F5A623', borderWidth: 2 }]}>
+            {profile?.avatar_url ? (
+              <Image source={{ uri: profile.avatar_url }} style={styles.avatarImageSmall} />
+            ) : (
+              <Ionicons name="person" size={40} color="#F5A623" />
+            )}
           </View>
-          <Text style={[styles.userName, { color: '#FFFFFF' }]}>
-            <Text style={{ color: '#F5A623' }}>Pro</Text>
-            <Text style={{ color: '#FFFFFF' }}>file</Text>
-          </Text>
-          <Text style={[styles.userEmail, { color: '#B8B8B8' }]}>{user?.email}</Text>
-        </View>
+          <Text style={styles.userNamePremium}>{profile?.full_name || 'Neural Developer'}</Text>
+          <Text style={styles.userEmailPremium}>{user?.email}</Text>
 
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: '#1A1A1A' }]}>
-            <Text style={styles.statNumber}>{savedHackathons.length}</Text>
-            <Text style={[styles.statLabel, { color: '#B8B8B8' }]}>Saved Hackathons</Text>
+          <TouchableOpacity
+            style={styles.viewProfileButton}
+            onPress={() => navigation.navigate('UserProfile', { userId: user?.id })}
+          >
+            <LinearGradient
+              colors={['#FFD700', '#F5A623']}
+              style={styles.viewProfileGradient}
+            >
+              <Text style={styles.viewProfileText}>ACCESS FULL PORTFOLIO</Text>
+              <Ionicons name="flash" size={14} color="#0A0A0A" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </LinearGradient>
+
+        {/* Stats Grid */}
+        <View style={styles.statsContainerPremium}>
+          <View style={styles.statCardPremium}>
+            <Text style={styles.statNumberPremium}>{savedHackathons.length}</Text>
+            <Text style={styles.statLabelPremium}>SAVED</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#1A1A1A' }]}>
-            <Text style={styles.statNumber}>0</Text>
-            <Text style={[styles.statLabel, { color: '#B8B8B8' }]}>Participated</Text>
+          <View style={styles.statCardPremium}>
+            <Text style={styles.statNumberPremium}>{profile?.hackathons_participated || 0}</Text>
+            <Text style={styles.statLabelPremium}>SHIPPED</Text>
+          </View>
+          <View style={styles.statCardPremium}>
+            <Text style={styles.statNumberPremium}>{profile?.followers_count || 0}</Text>
+            <Text style={styles.statLabelPremium}>EQUITY</Text>
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <View style={{
-          backgroundColor: '#1A1A1A',
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 12,
-          marginHorizontal: 16,
-        }}>
-          <Text style={{
-            fontSize: 18,
-            fontWeight: 'bold',
-            color: '#FFFFFF',
-            marginBottom: 16,
-          }}>
-            Quick Actions
-          </Text>
+        {/* Portfolio Mini Preview */}
+        {profile?.github_username && (
+          <View style={styles.previewContainer}>
+            <View style={styles.previewHeader}>
+              <Ionicons name="logo-github" size={18} color="#F5A623" />
+              <Text style={styles.previewTitle}>GITHUB_STATUS</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.previewCard}
+              onPress={() => navigation.navigate('UserProfile', { userId: user?.id })}
+            >
+              <View style={styles.heatmapMini}>
+                {Array.from({ length: 28 }).map((_, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.heatmapSquareMini,
+                      { backgroundColor: i % 5 === 0 ? '#F5A623' : '#1F1F1F' }
+                    ]}
+                  />
+                ))}
+              </View>
+              <View style={styles.previewInfo}>
+                <Text style={styles.previewInfoText}>@{profile.github_username}</Text>
+                <Ionicons name="chevron-forward" size={14} color="#F5A623" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
-            }}
-            onPress={() => navigation.navigate('UserProfile' as never, { userId: user?.id } as never)}
-          >
-            <Ionicons name="person-outline" size={20} color={'#F5A623'} />
-            <Text style={{
-              fontSize: 16,
-              color: '#FFFFFF',
-              marginLeft: 12,
-              flex: 1,
-            }}>
-              View Full Profile
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#64748b' : '#94A3B8'} />
+        {/* Menu Section */}
+        <View style={styles.menuSectionPremium}>
+          <TouchableOpacity style={styles.menuItemPremium} onPress={() => navigation.navigate('SavedHackathons')}>
+            <View style={styles.menuIconContainer}><Ionicons name="bookmark" size={20} color="#F5A623" /></View>
+            <Text style={styles.menuTextPremium}>Saved Hackathons</Text>
+            <Ionicons name="chevron-forward" size={18} color="#4A4A4A" />
           </TouchableOpacity>
 
-        </View>
-        <View style={[styles.menuContainer, { backgroundColor: '#1A1A1A' }]}>
-          <TouchableOpacity
-            style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
-            onPress={() => navigation.navigate('SavedHackathons' as never)}
-          >
-            <Ionicons name="heart" size={24} color={'#F5A623'} />
-            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Saved Hackathons</Text>
-            <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
+          <TouchableOpacity style={styles.menuItemPremium} onPress={() => navigation.navigate('Notifications')}>
+            <View style={styles.menuIconContainer}><Ionicons name="notifications" size={20} color="#F5A623" /></View>
+            <Text style={styles.menuTextPremium}>Notifications</Text>
+            <Ionicons name="chevron-forward" size={18} color="#4A4A4A" />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
-            onPress={() => navigation.navigate('Notifications' as never)}
-          >
-            <Ionicons name="notifications" size={24} color={'#F5A623'} />
-            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Notifications</Text>
-            <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
-            onPress={() => navigation.navigate('Settings' as never)}
-          >
-            <Ionicons name="settings" size={24} color={'#F5A623'} />
-            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Settings</Text>
-            <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.menuItem, { borderBottomColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
-            onPress={() => navigation.navigate('HelpSupport' as never)}
-          >
-            <Ionicons name="help-circle" size={24} color={'#F5A623'} />
-            <Text style={[styles.menuText, { color: '#FFFFFF' }]}>Help & Support</Text>
-            <Ionicons name="chevron-forward" size={20} color={isDarkMode ? '#94a3b8' : '#94A3B8'} />
+          <TouchableOpacity style={styles.menuItemPremium} onPress={() => navigation.navigate('Settings')}>
+            <View style={styles.menuIconContainer}><Ionicons name="settings" size={20} color="#F5A623" /></View>
+            <Text style={styles.menuTextPremium}>Settings</Text>
+            <Ionicons name="chevron-forward" size={18} color="#4A4A4A" />
           </TouchableOpacity>
         </View>
 
-        {/* Sign Out */}
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: '#1A1A1A' }]} onPress={handleSignOut}>
-          <Ionicons name="log-out" size={24} color="#EF4444" />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        {/* Support & Logout */}
+        <View style={styles.footerSection}>
+          <TouchableOpacity style={styles.menuItemPremium} onPress={() => navigation.navigate('HelpSupport')}>
+            <View style={styles.menuIconContainer}><Ionicons name="help-buoy" size={20} color="#F5A623" /></View>
+            <Text style={styles.menuTextPremium}>Help & Support</Text>
+            <Ionicons name="chevron-forward" size={18} color="#4A4A4A" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.logoutButtonPremium} onPress={handleSignOut}>
+            <Ionicons name="log-out" size={20} color="#EF4444" />
+            <Text style={styles.logoutTextPremium}>TERMINATE SESSION</Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -762,5 +768,178 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: 16,
     color: '#64748B',
+  },
+  // New Premium Profile Styles
+  profileHeaderPremium: {
+    alignItems: 'center',
+    padding: 32,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    marginBottom: 24,
+  },
+  avatarContainerLarge: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(245, 166, 35, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  avatarImageSmall: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+  },
+  userNamePremium: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  userEmailPremium: {
+    color: '#808080',
+    fontSize: 14,
+    marginBottom: 20,
+  },
+  viewProfileButton: {
+    width: 220,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  viewProfileGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  viewProfileText: {
+    color: '#0A0A0A',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  statsContainerPremium: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    gap: 12,
+    marginBottom: 32,
+  },
+  statCardPremium: {
+    flex: 1,
+    backgroundColor: '#111',
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  statNumberPremium: {
+    color: '#F5A623',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  statLabelPremium: {
+    color: '#444',
+    fontSize: 10,
+    fontWeight: '800',
+    marginTop: 4,
+    letterSpacing: 1,
+  },
+  previewContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 32,
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  previewTitle: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  previewCard: {
+    backgroundColor: '#111',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  heatmapMini: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 3,
+    width: 120,
+  },
+  heatmapSquareMini: {
+    width: 6,
+    height: 6,
+    borderRadius: 1,
+  },
+  previewInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  previewInfoText: {
+    color: '#F5A623',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  menuSectionPremium: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  menuItemPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#111',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  menuIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245, 166, 35, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  menuTextPremium: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  footerSection: {
+    paddingHorizontal: 16,
+    marginBottom: 40,
+  },
+  logoutButtonPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    gap: 12,
+    marginTop: 12,
+  },
+  logoutTextPremium: {
+    color: '#EF4444',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 2,
   },
 });

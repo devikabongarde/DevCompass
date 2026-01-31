@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 
 // Placeholder screens for new features
-export const HackathonDetailScreen: React.FC = () => (
+export const HackathonDetailPlaceholder: React.FC = () => (
   <View style={styles.container}>
     <Text style={styles.text}>Hackathon Detail Screen</Text>
   </View>

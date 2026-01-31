@@ -11,7 +11,7 @@ export interface Hackathon {
   end_date?: string;
   registration_deadline?: string;
   themes: string[];
-  platform_source: 'unstop' | 'devpost';
+  platform_source: 'unstop' | 'devpost' | 'devfolio';
   original_url: string;
   eligibility?: string;
   location_mode?: 'online' | 'offline' | 'hybrid';

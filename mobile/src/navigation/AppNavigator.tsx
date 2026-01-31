@@ -27,7 +27,7 @@ import { ConversationsScreen } from '../screens/ConversationsScreen';
 import { SavedHackathonsScreen, NotificationsScreen, SettingsScreen, HelpSupportScreen } from '../screens/ProfileScreens';
 import { FollowersScreen, FollowingScreen } from '../screens/FollowScreens';
 import { TeamDetailScreen } from '../screens/TeamDetailScreen';
-import { HackathonDetailScreen } from '../screens/HackathonDetailScreen';
+import { HackathonInfo } from '../screens/HackathonInfo';
 
 // New feature screens
 import {
@@ -348,11 +348,10 @@ export const AppNavigator: React.FC = () => {
               <Stack.Screen name="Main" component={DrawerNavigator} />
               <Stack.Screen
                 name="HackathonDetail"
-                component={HackathonDetailScreen}
+                component={HackathonInfo}
                 options={{
                   headerShown: true,
                   headerTitle: '',
-                  headerBackTitleVisible: false,
                   headerStyle: {
                     backgroundColor: isDarkMode ? '#1e293b' : theme.colors.surface,
                     shadowColor: 'transparent',
