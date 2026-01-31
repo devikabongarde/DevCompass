@@ -34,6 +34,7 @@ export const FeedScreen: React.FC = () => {
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
@@ -46,7 +47,23 @@ export const FeedScreen: React.FC = () => {
     loadHackathons,
     loadMore,
     refresh,
+    filters,
+    setFilters
   } = useFeedStore();
+
+  const THEMES = ["AI", "Blockchain", "Web", "Mobile", "Data Science", "Cybersecurity", "IoT", "Cloud", "Fintech", "Healthtech"];
+  const LOCATIONS = ["online", "offline", "hybrid"];
+
+  const toggleFilter = (type: 'themes' | 'locationMode', value: string) => {
+    const currentFilters = filters[type] || [];
+    const newFilters = currentFilters.includes(value as any)
+      ? currentFilters.filter(item => item !== value)
+      : [...currentFilters, value];
+
+    setFilters({ [type]: newFilters });
+  };
+
+  const activeFiltersCount = (filters.themes?.length || 0) + (filters.locationMode?.length || 0);
 
   const { saveHackathon, unsaveHackathon, isSaved } = useSavedStore();
   const { checkTeammateStatus, isLookingFor } = useTeammatesStore();
@@ -196,6 +213,13 @@ export const FeedScreen: React.FC = () => {
           </Text>
         </View>
         <View style={styles.topBarRight}>
+          <TouchableOpacity
+            style={[styles.iconButton, styles.glassButton, activeFiltersCount > 0 && styles.activeFilterButton]}
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Ionicons name="filter" size={24} color={activeFiltersCount > 0 ? "#FFFFFF" : "#F5A623"} />
+            {activeFiltersCount > 0 && <View style={styles.notificationBadge} />}
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.iconButton, styles.glassButton]}>
             <Ionicons name="notifications-outline" size={24} color="#F5A623" />
             <View style={styles.notificationBadge} />
@@ -302,6 +326,62 @@ export const FeedScreen: React.FC = () => {
               onPress={() => setShareModalVisible(false)}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Filter Modal */}
+      {filterModalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.filterModal, { backgroundColor: isDarkMode ? '#1e293b' : 'white' }]}>
+            <Text style={[styles.shareTitle, { color: isDarkMode ? '#f8fafc' : '#0F172A', marginBottom: 20 }]}>
+              Filter Hackathons
+            </Text>
+
+            <Text style={[styles.filterSectionTitle, { color: isDarkMode ? '#cbd5e1' : '#475569' }]}>Location</Text>
+            <View style={styles.filterOptions}>
+              {LOCATIONS.map(loc => (
+                <TouchableOpacity
+                  key={loc}
+                  style={[
+                    styles.filterChip,
+                    filters.locationMode?.includes(loc as any) && styles.activeFilterChip
+                  ]}
+                  onPress={() => toggleFilter('locationMode', loc)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    filters.locationMode?.includes(loc as any) && styles.activeFilterChipText
+                  ]}>{loc.charAt(0).toUpperCase() + loc.slice(1)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.filterSectionTitle, { color: isDarkMode ? '#cbd5e1' : '#475569', marginTop: 16 }]}>Domains</Text>
+            <View style={styles.filterOptions}>
+              {THEMES.map(themeItem => (
+                <TouchableOpacity
+                  key={themeItem}
+                  style={[
+                    styles.filterChip,
+                    filters.themes?.includes(themeItem) && styles.activeFilterChip
+                  ]}
+                  onPress={() => toggleFilter('themes', themeItem)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    filters.themes?.includes(themeItem) && styles.activeFilterChipText
+                  ]}>{themeItem}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.applyButton, { marginTop: 24 }]}
+              onPress={() => setFilterModalVisible(false)}
+            >
+              <Text style={styles.applyButtonText}>Done</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -645,5 +725,59 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  filterModal: {
+    width: '85%',
+    maxHeight: '70%',
+    borderRadius: 16,
+    padding: 24,
+  },
+  filterSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  filterOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: 'transparent',
+  },
+  activeFilterChip: {
+    backgroundColor: 'rgba(245, 166, 35, 0.15)',
+    borderColor: '#F5A623',
+  },
+  filterChipText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  activeFilterChipText: {
+    color: '#F5A623',
+    fontWeight: '600',
+  },
+  applyButton: {
+    backgroundColor: '#F5A623',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  applyButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  activeFilterButton: {
+    backgroundColor: '#F5A623',
+    borderWidth: 0,
   },
 });
