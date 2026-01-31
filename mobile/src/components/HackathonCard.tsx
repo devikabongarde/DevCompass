@@ -316,12 +316,12 @@ export const HackathonCard: React.FC<HackathonCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: screenWidth,
-    height: screenHeight - 140, // Account for top/bottom bars
+    height: '100%',
     ...theme.shadows.lg,
     borderRadius: 32, // More rounded outer corners
     overflow: 'hidden',
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: 0,
+    marginBottom: 0,
     marginHorizontal: 0,
     backgroundColor: '#000',
   },

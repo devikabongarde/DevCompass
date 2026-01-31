@@ -24,7 +24,9 @@ import { HackathonCard } from '../components/HackathonCard';
 import { messageService, profileService } from '../services/supabase';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
-const CARD_HEIGHT = screenHeight;
+const TOP_BAR_OFFSET = 110;
+const BOTTOM_OFFSET = 20;
+const CARD_HEIGHT = screenHeight - TOP_BAR_OFFSET - BOTTOM_OFFSET;
 
 export const FeedScreen: React.FC = () => {
   const { isDarkMode = false } = useThemeStore();
@@ -133,7 +135,7 @@ export const FeedScreen: React.FC = () => {
     });
 
     return (
-      <View {...panResponder.panHandlers}>
+      <View {...panResponder.panHandlers} style={{ height: CARD_HEIGHT, justifyContent: 'center' }}>
         <HackathonCard
           hackathon={item}
           onSave={() => handleSave(item)}
@@ -212,6 +214,10 @@ export const FeedScreen: React.FC = () => {
         data={hackathons}
         renderItem={renderHackathon}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{
+          paddingTop: TOP_BAR_OFFSET,
+          paddingBottom: BOTTOM_OFFSET,
+        }}
         pagingEnabled
         showsVerticalScrollIndicator={false}
         snapToInterval={CARD_HEIGHT}
@@ -238,7 +244,7 @@ export const FeedScreen: React.FC = () => {
         initialNumToRender={2}
         getItemLayout={(data, index) => ({
           length: CARD_HEIGHT,
-          offset: CARD_HEIGHT * index,
+          offset: CARD_HEIGHT * index + TOP_BAR_OFFSET,
           index,
         })}
       />
