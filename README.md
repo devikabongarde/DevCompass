@@ -46,8 +46,6 @@ python unstop_scraper.py
 - ✅ Authentication (Email + Google)
 - ✅ Auto-updated data from Unstop & Devpost
 
-## Development Status
-🚧 **In Development** - Phase 1 MVP
 
 ## Contributing
 This is a personal project, but feedback welcome!
